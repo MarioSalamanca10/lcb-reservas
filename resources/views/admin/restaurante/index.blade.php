@@ -1,67 +1,138 @@
 @extends('layouts.app')
+@section('title', 'Auditoría Restaurante')
+
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-8 text-left">
-        <h1 class="text-3xl sm:text-4xl font-black text-[#626366]">Panel de Restaurante</h1>
-        <p class="text-gray-500 text-lg mt-2">Aprobación y autorización de cocina.</p>
+<div class="w-full">
+    <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <div>
+            <h1 class="text-3xl font-black text-zinc-800">Panel de Restaurante</h1>
+            <p class="text-zinc-500 text-sm mt-1">Aprobación masiva y control de servicios de alimentación.</p>
+        </div>
     </div>
 
     @if(session('success'))
-        <div class="bg-[#4EAA68]/20 border-l-4 border-[#4EAA68] text-[#4EAA68] p-4 mb-6 shadow-sm rounded-2xl font-bold">✅ {{ session('success') }}</div>
+        <div class="bg-green-50 border border-green-200 text-green-700 p-4 mb-6 shadow-sm rounded-xl font-bold">✅ {{ session('success') }}</div>
     @endif
 
-    <div class="space-y-6">
-        @forelse($restaurantes as $rest)
-            <div class="bg-white rounded-3xl shadow-md border-l-8 border-[#FFDE00] overflow-hidden">
-                <div class="bg-yellow-50/30 p-4 sm:p-6 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-xl font-black text-[#626366]">{{ $rest->solicitud->titulo_evento ?? 'Sin título' }}</h3>
-                        <p class="text-sm text-gray-500 font-medium mt-1">Solicita: <span class="text-yellow-600">{{ $rest->solicitud->correo_solicitante }}</span></p>
-                    </div>
-                    <span class="px-4 py-1.5 rounded-full text-xs font-black uppercase {{ $rest->estado_restaurante == 'Aprobado' ? 'bg-green-100 text-green-700' : ($rest->estado_restaurante == 'Rechazado' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
-                        {{ $rest->estado_restaurante }}
-                    </span>
-                </div>
+    <!-- BARRA DE FILTROS COMPACTA -->
+    <div class="bg-white p-3 rounded-xl shadow-sm border border-zinc-200 mb-6 flex flex-wrap gap-3 items-center">
+        <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-2">Filtros:</span>
+        <form action="{{ route('admin.restaurante.index') }}" method="GET" class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <input type="text" name="fecha" value="{{ request('fecha') }}" placeholder="Fecha..." class="calendario-lcb bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-xs font-bold text-zinc-600 focus:ring-1 focus:ring-[#FFDE00] w-32">
+            
+            <select name="estado" class="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-xs font-bold text-zinc-600 focus:ring-1 focus:ring-[#FFDE00]">
+                <option value="">Todos los Estados</option>
+                <option value="Pendiente" {{ request('estado') == 'Pendiente' ? 'selected' : '' }}>⏳ Pendientes</option>
+                <option value="Aprobado" {{ request('estado') == 'Aprobado' ? 'selected' : '' }}>✅ Aprobados</option>
+                <option value="Rechazado" {{ request('estado') == 'Rechazado' ? 'selected' : '' }}>❌ Rechazados</option>
+            </select>
+            
+            <input type="text" name="solicitante" value="{{ request('solicitante') }}" placeholder="Correo Docente..." class="bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-1.5 text-xs font-bold text-zinc-600 focus:ring-1 focus:ring-[#FFDE00] w-48">
+            
+            <button type="submit" class="bg-zinc-800 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-zinc-700 transition-colors">Buscar</button>
+            @if(request()->has('fecha') || request()->has('estado') || request()->has('solicitante'))
+                <a href="{{ route('admin.restaurante.index') }}" class="text-zinc-400 hover:text-red-500 text-xs font-bold px-2 py-1.5 transition-colors">Limpiar</a>
+            @endif
+        </form>
+    </div>
 
-                <div class="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4 text-sm">
-                            <div><p class="text-gray-400 font-bold uppercase text-[10px]">Fecha Servicio</p><p class="font-semibold text-gray-700">{{ \Carbon\Carbon::parse($rest->fecha_hora_evento)->format('d/m/Y H:i') }}</p></div>
-                            <div><p class="text-gray-400 font-bold uppercase text-[10px]">Cantidad</p><p class="font-semibold text-gray-700">{{ $rest->num_asistentes }} Personas</p></div>
-                            <div class="col-span-2"><p class="text-gray-400 font-bold uppercase text-[10px]">Ubicación</p><p class="font-semibold text-gray-700">{{ $rest->solicitud->reservaFisica->espacio->nombre ?? 'N/A' }}</p></div>
-                        </div>
-                        <div class="bg-yellow-50 border border-yellow-100 p-4 rounded-xl">
-                            <p class="text-yellow-600 font-bold uppercase text-[10px] mb-2">Servicios Solicitados</p>
-                            <div class="flex flex-wrap gap-2">
-                                @if(is_array($rest->servicio_requerido))
-                                    @foreach($rest->servicio_requerido as $srv) <span class="bg-white border border-yellow-200 px-3 py-1 rounded-full text-xs font-bold shadow-sm">{{ $srv }}</span> @endforeach
+    <!-- TABLA DE DATOS ERP -->
+    <div class="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
+                <thead class="bg-zinc-800 text-zinc-100 uppercase text-[10px] font-black tracking-widest">
+                    <tr>
+                        <th class="p-4">Información del Evento</th>
+                        <th class="p-4">Detalles del Servicio</th>
+                        <th class="p-4">Dietas y Requerimientos</th>
+                        <th class="p-4 w-1/4">Decisión Gerencia</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-200">
+                    @forelse($restaurantes as $rest)
+                        @php
+                            $estado = $rest->estado_restaurante;
+                            // COHERENCIA DE COLOR EN TODA LA FILA
+                            $rowColor = $estado == 'Aprobado' ? 'bg-green-50/50' : ($estado == 'Rechazado' ? 'bg-red-50/50' : 'bg-white');
+                            $badgeColor = $estado == 'Aprobado' ? 'bg-green-200 text-green-800' : ($estado == 'Rechazado' ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800');
+                        @endphp
+
+                        <tr class="{{ $rowColor }} hover:bg-zinc-50 transition-colors group">
+                            
+                            <!-- COLUMNA 1: INFO -->
+                            <td class="p-4 align-top">
+                                <span class="px-2 py-1 rounded text-[10px] font-black tracking-widest {{ $badgeColor }} mb-2 inline-block">
+                                    {{ $estado }}
+                                </span>
+                                <h3 class="font-black text-zinc-800 text-base leading-tight">{{ $rest->solicitud->titulo_evento ?? 'Sin título' }}</h3>
+                                <p class="text-xs text-yellow-600 font-bold mt-1">{{ $rest->solicitud->correo_solicitante }}</p>
+                                <p class="text-xs text-zinc-500 mt-1 flex items-center gap-1">
+                                    <b>Asistentes:</b> <span class="bg-zinc-200 text-zinc-700 px-1.5 py-0.5 rounded text-[10px] font-black">{{ $rest->num_asistentes }}</span>
+                                </p>
+                            </td>
+
+                            <!-- COLUMNA 2: DETALLES -->
+                            <td class="p-4 align-top">
+                                <div class="bg-white/60 p-2 rounded-lg border border-zinc-200/50">
+                                    <p class="text-xs font-bold text-zinc-700">📍 {{ $rest->solicitud->reservaFisica->espacio->nombre ?? 'Entrega en área del solicitante' }}</p>
+                                    @if($rest->solicitud->reservaFisica)
+                                        <p class="text-[10px] font-bold text-zinc-400 mt-0.5">{{ $rest->solicitud->reservaFisica->espacio->torre->nombre ?? '' }}</p>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-zinc-600 mt-2"><b>Fecha/Hora:</b> {{ \Carbon\Carbon::parse($rest->fecha_hora_evento)->format('d/m/Y h:i A') }}</p>
+                            </td>
+
+                            <!-- COLUMNA 3: DIETAS -->
+                            <td class="p-4 align-top text-xs text-zinc-600">
+                                <div class="flex flex-wrap gap-1 mb-2">
+                                    @if(is_array($rest->servicio_requerido))
+                                        @foreach($rest->servicio_requerido as $srv) 
+                                            <span class="bg-white border border-zinc-300 px-2 py-0.5 rounded text-[10px] font-bold text-zinc-600 shadow-sm">{{ $srv }}</span> 
+                                        @endforeach
+                                    @endif
+                                </div>
+                                @if($rest->detalles_solicitud)
+                                    <p class="italic border-l-2 border-zinc-300 pl-2 mt-1">{{ $rest->detalles_solicitud }}</p>
+                                @else
+                                    <p class="text-[10px] text-zinc-400">Sin detalles adicionales.</p>
                                 @endif
-                            </div>
-                            @if($rest->detalles_solicitud)
-                            <div class="mt-3 pt-3 border-t border-yellow-200"><p class="text-gray-400 font-bold uppercase text-[10px]">Dietas / Detalles</p><p class="text-sm text-gray-600 italic">{{ $rest->detalles_solicitud }}</p></div>
-                            @endif
-                        </div>
-                    </div>
+                            </td>
 
-                    <div class="bg-yellow-50/30 p-5 rounded-2xl border border-yellow-100 h-fit">
-                        <form action="{{ route('admin.restaurante.update', $rest->id) }}" method="POST">
-                            @csrf @method('PATCH')
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Decisión Gerencia</label>
-                            <select name="estado_restaurante" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#FFDE00] font-bold text-gray-700 mb-4">
-                                <option value="Pendiente" {{ $rest->estado_restaurante == 'Pendiente' ? 'selected' : '' }}>⏳ Mantener Pendiente</option>
-                                <option value="Aprobado" {{ $rest->estado_restaurante == 'Aprobado' ? 'selected' : '' }}>✅ Autorizar a Cocina</option>
-                                <option value="Rechazado" {{ $rest->estado_restaurante == 'Rechazado' ? 'selected' : '' }}>❌ Rechazar</option>
-                            </select>
-                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Instrucciones</label>
-                            <textarea name="respuesta_cocina" rows="2" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#FFDE00] mb-4">{{ $rest->respuesta_cocina }}</textarea>
-                            <button type="submit" class="w-full bg-[#FFDE00] text-[#626366] font-black py-3 rounded-xl hover:bg-yellow-400 transition-colors">Guardar Decisión</button>
-                        </form>
-                    </div>
-                </div>
+                            <!-- COLUMNA 4: EDICIÓN CONTINUA -->
+                            <td class="p-4 align-top bg-zinc-50/50">
+                                <form action="{{ route('admin.restaurante.update', $rest->id) }}" method="POST" class="flex flex-col gap-2">
+                                    @csrf @method('PATCH')
+                                    
+                                    <select name="estado_restaurante" class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs font-bold text-zinc-700 focus:ring-1 focus:ring-[#FFDE00]">
+                                        <option value="Pendiente" {{ $estado == 'Pendiente' ? 'selected' : '' }}>⏳ Pendiente</option>
+                                        <option value="Aprobado" {{ $estado == 'Aprobado' ? 'selected' : '' }}>✅ Aprobado</option>
+                                        <option value="Rechazado" {{ $estado == 'Rechazado' ? 'selected' : '' }}>❌ Rechazado</option>
+                                    </select>
+
+                                    <textarea name="respuesta_cocina" rows="2" placeholder="Instrucciones para Cocina o Docente..." class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs focus:ring-1 focus:ring-[#FFDE00]">{{ $rest->respuesta_cocina }}</textarea>
+                                    
+                                    <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-yellow-500 hover:text-zinc-900 transition-colors">
+                                        Guardar
+                                    </button>
+                                </form>
+                            </td>
+
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="p-10 text-center text-zinc-500 font-bold">No hay pedidos de restaurante que coincidan con los filtros.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- LINKS DE PAGINACIÓN -->
+        @if($restaurantes->hasPages())
+            <div class="p-4 border-t border-zinc-200 bg-zinc-50">
+                {{ $restaurantes->links() }}
             </div>
-        @empty
-            <div class="text-center py-10"><p class="text-gray-500 font-bold mt-4">No hay pedidos de restaurante.</p></div>
-        @endforelse
+        @endif
     </div>
 </div>
 @endsection

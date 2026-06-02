@@ -179,39 +179,37 @@ class ReservaFisicaController extends Controller
     public function index(Request $request)
     {
         $usuario = auth()->user();
-        $query = ReservaFisica::with(['solicitud', 'espacio.torre']);
-
-        if ($usuario->rol !== 'admin') {
-            $query->whereHas('solicitud', function($q) use ($usuario) {
-                $q->where('correo_solicitante', $usuario->email);
-            });
-        }
-
-        if ($request->filled('fecha')) {
-            $query->whereDate('fecha_inicio', $request->fecha); 
-        }
         
-        if ($request->filled('espacio')) {
-            $query->whereHas('espacio', function($q) use ($request) {
-                $q->where('nombre', 'like', '%' . $request->espacio . '%');
+        // Llamamos al Ticket Padre y le pedimos que traiga a todos los hijos
+        $query = SolicitudGeneral::with(['reservaFisica.espacio.torre', 'transporte', 'restaurante']);
+
+        // Si NO es Super Admin, filtramos para que solo vea sus propios tickets
+        if ($usuario->rol !== 'admin') {
+            $query->where('correo_solicitante', $usuario->email);
+        }
+
+        // --- SISTEMA DE FILTROS ---
+        if ($request->filled('categoria')) {
+            if ($request->categoria === 'espacios') {
+                $query->has('reservaFisica');
+            } elseif ($request->categoria === 'transporte') {
+                $query->has('transporte');
+            } elseif ($request->categoria === 'restaurante') {
+                $query->has('restaurante');
+            }
+        }
+
+        if ($request->filled('estado')) {
+            $estado = $request->estado;
+            // Busca si ALGÚN hijo tiene ese estado
+            $query->where(function($q) use ($estado) {
+                $q->whereHas('transporte', function($t) use ($estado) { $t->where('estado_transporte', $estado); })
+                  ->orWhereHas('restaurante', function($r) use ($estado) { $r->where('estado_restaurante', $estado); });
             });
         }
+        $solicitudes = $query->orderBy('created_at', 'desc')->paginate(10); 
 
-        $reservas = $query->orderBy('fecha_inicio', 'desc')->get(); 
-
-        return view('reservas.index', compact('reservas'));
-    }
-
-    public function destroy(ReservaFisica $reserva)
-    {
-        $usuario = auth()->user();
-
-        if ($usuario->rol !== 'admin' && $usuario->email !== $reserva->solicitud->correo_solicitante) {
-            return back()->with('error', 'No tienes permiso para cancelar esta reserva.');
-        }
-
-        $reserva->solicitud->delete();
-        return back()->with('success', 'La reserva ha sido cancelada y el espacio está libre nuevamente.');
+        return view('reservas.index', compact('solicitudes'));
     }
 
     public function adminIndex(Request $request)
@@ -238,6 +236,38 @@ class ReservaFisicaController extends Controller
         $torres = Torre::all();
         
         return view('admin.reservas.index', compact('reservas', 'torres'));
+    }
+
+    public function destroy($id)
+    {
+        $usuario = auth()->user();
+        $solicitud = SolicitudGeneral::with(['reservaFisica', 'transporte', 'restaurante'])->findOrFail($id);
+
+        if ($usuario->rol !== 'admin' && $usuario->email !== $solicitud->correo_solicitante) {
+            return back()->with('error', 'No tienes permiso para cancelar esta solicitud.');
+        }
+
+        // Regla de Negocio: Validar tiempo (Mínimo 24 horas de anticipación)
+        // Buscamos la fecha más próxima entre los servicios que tenga
+        $fechaEvento = null;
+        if ($solicitud->reservaFisica) $fechaEvento = $solicitud->reservaFisica->fecha_inicio;
+        elseif ($solicitud->transporte) $fechaEvento = $solicitud->transporte->fecha_hora_servicio;
+        elseif ($solicitud->restaurante) $fechaEvento = $solicitud->restaurante->fecha_hora_evento;
+
+        if ($fechaEvento && $usuario->rol !== 'admin') {
+            $horasFaltantes = \Carbon\Carbon::now()->diffInHours(\Carbon\Carbon::parse($fechaEvento), false);
+            if ($horasFaltantes < 24) {
+                return back()->with('error', 'No puedes cancelar una solicitud con menos de 24 horas de anticipación. Por favor, contacta directamente a Gerencia.');
+            }
+        }
+
+        // Borrado en Cascada manual por seguridad (Borra hijos y luego padre)
+        if ($solicitud->reservaFisica) $solicitud->reservaFisica()->delete();
+        if ($solicitud->transporte) $solicitud->transporte()->delete();
+        if ($solicitud->restaurante) $solicitud->restaurante()->delete();
+        $solicitud->delete();
+
+        return back()->with('success', 'La solicitud ha sido cancelada exitosamente en todos sus módulos.');
     }
 
     public function showEncuestaForm(ReservaFisica $reserva)

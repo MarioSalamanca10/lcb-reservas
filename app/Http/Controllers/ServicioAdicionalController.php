@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\SolicitudGeneral;
 use App\Models\SolicitudTransporte;
+use App\Models\SolicitudRestaurante;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class ServicioAdicionalController extends Controller
 {
@@ -35,15 +37,13 @@ class ServicioAdicionalController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Creamos el Eje Central (Ticket Padre)
             $solicitud = SolicitudGeneral::create([
                 'correo_solicitante' => auth()->user()->email,
                 'titulo_evento' => $request->titulo,
-                'estado_global' => 'Aprobado' // El padre nace aprobado
+                'estado_global' => 'Aprobado'
             ]);
 
-            // 2. Creamos el ticket de Transporte vinculado al padre
-            SolicitudTransporte::create([
+            $transporte = SolicitudTransporte::create([
                 'solicitud_id' => $solicitud->id,
                 'nombre_responsable' => $request->trans_responsable,
                 'celular_responsable' => $request->trans_celular,
@@ -57,16 +57,97 @@ class ServicioAdicionalController extends Controller
                 'num_adultos' => $request->trans_adultos ?? 0,
                 'necesidades_servicio' => $request->trans_necesidades ?? [],
                 'observaciones' => $request->trans_observaciones,
-                'estado_transporte' => 'Agendado' // Se envía directo a la bandeja
+                'estado_transporte' => 'Pendiente' // Asegúrate de que nazca Pendiente
             ]);
 
             DB::commit();
+
+            // --- INICIO ENVÍO DE CORREOS DE CREACIÓN ---
+            $datosCorreo = [
+                'titulo' => $request->titulo,
+                'servicio' => 'Transporte y Rutas',
+                'solicitante_nombre' => auth()->user()->name,
+                'solicitante_correo' => auth()->user()->email,
+                'fecha' => \Carbon\Carbon::parse($request->trans_salida)->format('d/m/Y h:i A'),
+                'detalles' => 'Destino: ' . $request->trans_dir_destino . ' (' . ($request->trans_estudiantes + $request->trans_adultos) . ' pasajeros)'
+            ];
+
+            // 1. Correo al Docente
+            Mail::to(auth()->user()->email)->send(new NuevaSolicitudRecibida($datosCorreo, 'docente'));
+
+            // 2. Correo a los Administradores de Transporte y Super Admins
+            $adminsTransporte = User::whereIn('rol', ['admin', 'admin_transporte'])->pluck('email');
+            if($adminsTransporte->count() > 0) {
+                Mail::to($adminsTransporte)->send(new NuevaSolicitudRecibida($datosCorreo, 'admin'));
+            }
+            // --- FIN ENVÍO DE CORREOS ---
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withInput()->with('error', 'Error al procesar la solicitud: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error al procesar: ' . $e->getMessage());
         }
 
         // Redirigimos al profesor a su panel de "Mis Solicitudes"
         return redirect()->route('reservas.index')->with('success', '¡Su solicitud de transporte ha sido enviada a Coordinación exitosamente!');
+    }
+
+    /**
+     * Guarda una solicitud exclusiva de Restaurante
+     */
+    public function storeRestaurante(Request $request)
+    {
+        $request->validate([
+            'titulo' => 'required|string|max:255',
+            'rest_fecha_hora' => 'required|date',
+            'rest_asistentes' => 'required|integer|min:1',
+            'rest_servicios' => 'required|array|min:1', // Obliga a marcar al menos un checkbox
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $solicitud = SolicitudGeneral::create([
+                'correo_solicitante' => auth()->user()->email,
+                'titulo_evento' => $request->titulo,
+                'estado_global' => 'Aprobado'
+            ]);
+
+            $restaurante = SolicitudRestaurante::create([
+                'solicitud_id' => $solicitud->id,
+                'fecha_hora_evento' => $request->rest_fecha_hora,
+                'num_asistentes' => $request->rest_asistentes,
+                'servicio_requerido' => $request->rest_servicios,
+                'detalles_solicitud' => $request->rest_detalles,
+                'estado_restaurante' => 'Pendiente'
+            ]);
+
+            DB::commit();
+
+            // --- INICIO ENVÍO DE CORREOS DE CREACIÓN ---
+            $datosCorreo = [
+                'titulo' => $request->titulo,
+                'servicio' => 'Alimentación / Restaurante',
+                'solicitante_nombre' => auth()->user()->name,
+                'solicitante_correo' => auth()->user()->email,
+                'fecha' => \Carbon\Carbon::parse($request->rest_fecha_hora)->format('d/m/Y h:i A'),
+                'detalles' => 'Para ' . $request->rest_asistentes . ' personas. Servicios: ' . implode(', ', $request->rest_servicios)
+            ];
+
+            // 1. Correo al Docente
+            Mail::to(auth()->user()->email)->send(new NuevaSolicitudRecibida($datosCorreo, 'docente'));
+
+            // 2. Correo a los Administradores de Restaurante y Super Admins
+            $adminsRestaurante = User::whereIn('rol', ['admin', 'admin_restaurante'])->pluck('email');
+            if($adminsRestaurante->count() > 0) {
+                Mail::to($adminsRestaurante)->send(new NuevaSolicitudRecibida($datosCorreo, 'admin'));
+            }
+            // --- FIN ENVÍO DE CORREOS ---
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Error al procesar: ' . $e->getMessage());
+        }
+
+        return redirect()->route('reservas.index')->with('success', '¡Su solicitud de restaurante ha sido enviada a Gerencia para su aprobación!');
     }
 }

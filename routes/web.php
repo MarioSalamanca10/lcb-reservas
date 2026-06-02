@@ -45,7 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/servicios/transporte/nuevo', [\App\Http\Controllers\ServicioAdicionalController::class, 'createTransporte'])->name('servicios.transporte.create');
     Route::post('/servicios/transporte', [\App\Http\Controllers\ServicioAdicionalController::class, 'storeTransporte'])->name('servicios.transporte.store');
 
-    Route::get('/servicios/restaurante/nuevo', [\App\Http\Controllers\ServicioAdicionalController::class, 'createRestaurante'])->name('servicios.restaurante.create'); 
+    Route::get('/servicios/restaurante/nuevo', [\App\Http\Controllers\ServicioAdicionalController::class, 'createRestaurante'])->name('servicios.restaurante.create');
+    Route::post('/servicios/restaurante', [\App\Http\Controllers\ServicioAdicionalController::class, 'storeRestaurante'])->name('servicios.restaurante.store');
     
     // Rutas para la Encuesta Obligatoria
     Route::get('/reservas/{reserva}/encuesta', [ReservaFisicaController::class, 'showEncuestaForm'])->name('reservas.encuesta.create');
