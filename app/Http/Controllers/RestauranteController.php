@@ -44,18 +44,33 @@ class RestauranteController extends Controller
             'respuesta_cocina' => $request->respuesta_cocina
         ]);
 
-        // --- INICIO ENVÍO DE CORREO ---
+        // --- INICIO ENVÍO DE CORREO (EL RELEVO) ---
         try {
-            $correoDocente = $restaurante->solicitud->correo_solicitante;
+            $estadoNuevo = $request->estado_restaurante;
             
+            // 1. Correo normal para el Docente notificando el cambio
             $datosCorreo = [
                 'titulo' => $restaurante->solicitud->titulo_evento,
                 'servicio' => 'Alimentación / Restaurante',
-                'estado' => $restaurante->estado_restaurante,
-                'notas' => $restaurante->respuesta_cocina
+                'estado' => $estadoNuevo,
+                'notas' => $request->respuesta_cocina
             ];
+            \Illuminate\Support\Facades\Mail::to($restaurante->solicitud->correo_solicitante)
+                ->send(new \App\Mail\NotificacionEstadoServicio($datosCorreo));
 
-            Mail::to($correoDocente)->send(new NotificacionEstadoServicio($datosCorreo));
+            // 2. ALERTA A LA COCINA (Solo si se aprueba un evento)
+            if ($estadoNuevo === 'Aprobado') {
+                // Buscamos los correos de todo el personal que tenga el rol 'cocina'
+                $correosCocina = \App\Models\User::where('rol', 'cocina')->pluck('email');
+                
+                if ($correosCocina->count() > 0) {
+                    $datosCocina = $datosCorreo;
+                    // Le ponemos un título llamativo (con banderas) para que la cocina no lo ignore
+                    $datosCocina['titulo'] = '🚨 NUEVO PEDIDO APROBADO: ' . $restaurante->solicitud->titulo_evento;
+                    \Illuminate\Support\Facades\Mail::to($correosCocina)
+                        ->send(new \App\Mail\NotificacionEstadoServicio($datosCocina));
+                }
+            }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error enviando correo de restaurante: ' . $e->getMessage());
         }

@@ -103,28 +103,25 @@
             <!-- ========================================== -->
             <!-- ZONA VIP: CENTRO DE CONTROL                -->
             <!-- ========================================== -->
-            @if(in_array(auth()->user()->rol, ['admin', 'admin_transporte', 'admin_restaurante']))
+            @if(in_array(auth()->user()->rol, ['admin', 'admin_transporte', 'admin_restaurante', 'cocina', 'admin_espacios']))
                 <div class="h-px bg-zinc-800 my-5 w-full"></div>
                 <p class="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-4 mb-3">Centro de Control</p>
                 
-                <!-- Sólo Súper Admin -->
-                @if(auth()->user()->rol === 'admin')
-                    <a href="{{ route('admin.dashboard') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.dashboard') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.dashboard') ? 'grayscale-0 opacity-100 scale-110' : '' }}">📊</span>
-                        <span class="font-semibold text-sm tracking-wide">Tablero General</span>
-                    </a>
+               <!-- Admin Espacios y Súper Admin -->
+                @if(in_array(auth()->user()->rol, ['admin', 'admin_espacios']))
+                    <!-- Tablero General (Súper Admin lo ve, luego lo volveremos Reportes) -->
+                    @if(auth()->user()->rol === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-800 text-white' : '' }}">
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.dashboard') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
+                            <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.dashboard') ? 'grayscale-0 opacity-100 scale-110' : '' }}">📊</span>
+                            <span class="font-semibold text-sm tracking-wide">Tablero General</span>
+                        </a>
+                    @endif
 
                     <a href="{{ route('admin.reservas.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.reservas.index') ? 'bg-zinc-800 text-white' : '' }}">
                         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.reservas.index') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
                         <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.reservas.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">⚙️</span>
                         <span class="font-semibold text-sm tracking-wide">Auditoría Reservas</span>
-                    </a>
-
-                    <a href="{{ route('torres.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('torres.index') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('torres.index') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('torres.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">🏗️</span>
-                        <span class="font-semibold text-sm tracking-wide">Catálogo Bloques</span>
                     </a>
 
                     <a href="{{ route('espacios.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('espacios.index') ? 'bg-zinc-800 text-white' : '' }}">
@@ -148,7 +145,15 @@
                     <a href="{{ route('admin.restaurante.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.restaurante.index') ? 'bg-zinc-800 text-white' : '' }}">
                         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFDE00] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.restaurante.index') ? 'opacity-100 shadow-[0_0_8px_#FFDE00]' : '' }}"></div>
                         <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.restaurante.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">👩‍🍳</span>
-                        <span class="font-semibold text-sm tracking-wide">Aprob. Restaurante</span>
+                        <span class="font-semibold text-sm tracking-wide">Gestión Restaurante</span>
+                    </a>
+                @endif
+
+                @if(in_array(auth()->user()->rol, ['admin', 'cocina']))
+                    <a href="{{ route('cocina.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('cocina.index') ? 'bg-zinc-800 text-white' : '' }}">
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('cocina.index') ? 'opacity-100 shadow-[0_0_8px_#f97316]' : '' }}"></div>
+                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('cocina.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">👨‍🍳</span>
+                        <span class="font-semibold text-sm tracking-wide">Tablero del Chef</span>
                     </a>
                 @endif
             @endif

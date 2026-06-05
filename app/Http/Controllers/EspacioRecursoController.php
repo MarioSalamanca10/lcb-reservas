@@ -8,8 +8,14 @@ use App\Models\ReservaFisica;
 
 class EspacioRecursoController extends Controller
 {
+
+
     public function index()
     {
+        // CANDADO MANUAL SEGURO
+        if (!in_array(auth()->user()->rol, ['admin', 'admin_espacios'])) {
+            abort(403, 'Acceso Denegado. Panel exclusivo para Administración de Espacios.');
+        }
         // Traemos todos los espacios, pero le exigimos que incluya la 'torre' a la que pertenecen
         $espacios = \App\Models\Espacio::with('torre')->orderBy('created_at', 'desc')->get();
         
@@ -109,8 +115,9 @@ class EspacioRecursoController extends Controller
     }
 
     // Elimina un espacio del sistema
-    public function destroy(EspacioRecurso $espacio)
+    public function destroy($id)
     {
+        $espacio = \App\Models\Espacio::findOrFail($id);
         $espacio->delete();
         return redirect()->route('espacios.index');
     }
@@ -129,6 +136,7 @@ class EspacioRecursoController extends Controller
 
         return view('admin.dashboard', compact('totalEspacios', 'totalReservas', 'reservasHoy', 'ultimasReservas'));
     }
+    
     public function importar(Request $request)
     {
         $request->validate([
@@ -200,5 +208,4 @@ class EspacioRecursoController extends Controller
 
         return back()->with('success', "¡Importación Exitosa! Se registraron o actualizaron $espaciosCreados espacios y se detectaron $torresCreadas bloques.");
     }
-    
 }

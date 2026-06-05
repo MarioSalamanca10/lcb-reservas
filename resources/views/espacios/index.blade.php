@@ -8,9 +8,15 @@
             <p class="text-gray-500 text-lg mt-2">Administra el inventario de aulas, auditorios y salas.</p>
         </div>
         
-        <a href="{{ route('espacios.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-xl transition-all shadow-xl hover:shadow-blue-500/40 flex items-center gap-2">
-            <span class="text-xl">+</span> Nuevo Espacio
-        </a>
+        <div class="flex flex-wrap items-center gap-3">
+            <a href="{{ route('torres.index') }}" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 font-black py-3 px-6 rounded-xl transition-all shadow-sm flex items-center gap-2">
+                <span class="text-xl">🏗️</span> Gestionar Torres
+            </a>
+
+            <a href="{{ route('espacios.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-black py-3 px-6 rounded-xl transition-all shadow-xl hover:shadow-blue-500/40 flex items-center gap-2">
+                <span class="text-xl">+</span> Nuevo Espacio
+            </a>
+        </div>
     </div>
 
     @if(session('success'))

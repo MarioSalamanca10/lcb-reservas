@@ -98,23 +98,35 @@
                                 @endif
                             </td>
 
-                            <!-- COLUMNA 4: EDICIÓN CONTINUA -->
+                            <!-- COLUMNA 4: DECISIÓN Y BLOQUEO (INMUTABILIDAD) -->
                             <td class="p-4 align-top bg-zinc-50/50">
-                                <form action="{{ route('admin.restaurante.update', $rest->id) }}" method="POST" class="flex flex-col gap-2">
-                                    @csrf @method('PATCH')
-                                    
-                                    <select name="estado_restaurante" class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs font-bold text-zinc-700 focus:ring-1 focus:ring-[#FFDE00]">
-                                        <option value="Pendiente" {{ $estado == 'Pendiente' ? 'selected' : '' }}>⏳ Pendiente</option>
-                                        <option value="Aprobado" {{ $estado == 'Aprobado' ? 'selected' : '' }}>✅ Aprobado</option>
-                                        <option value="Rechazado" {{ $estado == 'Rechazado' ? 'selected' : '' }}>❌ Rechazado</option>
-                                    </select>
+                                @if($estado == 'Pendiente')
+                                    <!-- Aún no se ha decidido: Mostrar Formulario -->
+                                    <form action="{{ route('admin.restaurante.update', $rest->id) }}" method="POST" class="flex flex-col gap-2" onsubmit="return confirm('¿Está seguro de su decisión? Una vez guardado, este registro quedará bloqueado.');">
+                                        @csrf @method('PATCH')
+                                        
+                                        <select name="estado_restaurante" class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs font-bold text-zinc-700 focus:ring-1 focus:ring-[#FFDE00]" required>
+                                            <option value="" disabled selected>Tomar decisión...</option>
+                                            <option value="Aprobado">✅ Aprobar (Enviar a Cocina)</option>
+                                            <option value="Rechazado">❌ Rechazar</option>
+                                        </select>
 
-                                    <textarea name="respuesta_cocina" rows="2" placeholder="Instrucciones para Cocina o Docente..." class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs focus:ring-1 focus:ring-[#FFDE00]">{{ $rest->respuesta_cocina }}</textarea>
-                                    
-                                    <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-yellow-500 hover:text-zinc-900 transition-colors">
-                                        Guardar
-                                    </button>
-                                </form>
+                                        <textarea name="respuesta_cocina" rows="2" placeholder="Justificación o instrucciones..." class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs focus:ring-1 focus:ring-[#FFDE00]" required></textarea>
+                                        
+                                        <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-yellow-500 hover:text-zinc-900 transition-colors shadow-sm">
+                                            Guardar y Sellar
+                                        </button>
+                                    </form>
+                                @else
+                                    <!-- Decisión tomada: UI Bloqueada de Solo Lectura -->
+                                    <div class="bg-white border {{ $estado == 'Aprobado' || $estado == 'Finalizado' ? 'border-green-200' : 'border-red-200' }} rounded-lg p-3 text-center shadow-sm opacity-80 cursor-not-allowed">
+                                        <span class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Registro Sellado</span>
+                                        <span class="inline-block px-3 py-1 rounded text-xs font-bold {{ $estado == 'Aprobado' || $estado == 'Finalizado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                            {{ $estado }}
+                                        </span>
+                                        <p class="text-[10px] text-zinc-500 mt-2 italic leading-tight">{{ $rest->respuesta_cocina }}</p>
+                                    </div>
+                                @endif
                             </td>
 
                         </tr>

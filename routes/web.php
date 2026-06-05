@@ -61,6 +61,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/admin/restaurante', [\App\Http\Controllers\RestauranteController::class, 'index'])->name('admin.restaurante.index');
     Route::patch('/admin/restaurante/{id}', [\App\Http\Controllers\RestauranteController::class, 'update'])->name('admin.restaurante.update');
+    
+    // RUTA EXCLUSIVA PARA EL STAFF DE COCINA
+
+    Route::get('/cocina/tablero', [\App\Http\Controllers\CocinaController::class, 'index'])->name('cocina.index');
+    Route::patch('/cocina/{id}/finalizar', [\App\Http\Controllers\CocinaController::class, 'finalizar'])->name('cocina.finalizar'); 
 
 
     // ==========================================

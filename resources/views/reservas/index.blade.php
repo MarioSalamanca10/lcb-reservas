@@ -88,12 +88,19 @@
                                             $estT = $solicitud->transporte->estado_transporte;
                                             $colT = $estT == 'Pendiente' ? 'yellow' : (in_array($estT, ['Agendado', 'Aprobado']) ? 'green' : 'red');
                                         @endphp
-                                        <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2 bg-{{ $colT }}-50/50 p-2 rounded-lg border border-{{ $colT }}-100">
-                                            <span class="bg-{{ $colT }}-100 text-{{ $colT }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🚌 {{ $estT }}</span>
-                                            <div class="text-xs text-{{ $colT }}-900 leading-tight">
-                                                <b>Destino:</b> {{ $solicitud->transporte->direccion_destino }} 
-                                                ({{ \Carbon\Carbon::parse($solicitud->transporte->fecha_hora_servicio)->format('d/m/y H:i') }})
+                                        <div class="flex flex-col gap-2 bg-{{ $colT }}-50/50 p-3 rounded-lg border border-{{ $colT }}-200">
+                                            <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2">
+                                                <span class="bg-{{ $colT }}-100 text-{{ $colT }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🚌 {{ $estT }}</span>
+                                                <div class="text-xs text-{{ $colT }}-900 leading-tight">
+                                                    <b>Destino:</b> {{ $solicitud->transporte->direccion_destino }} 
+                                                    ({{ \Carbon\Carbon::parse($solicitud->transporte->fecha_hora_servicio)->format('d/m/y H:i') }})
+                                                </div>
                                             </div>
+                                            @if($solicitud->transporte->respuesta_coordinador)
+                                                <div class="bg-white/60 p-2 rounded text-[11px] text-{{ $colT }}-800 border border-{{ $colT }}-100 italic">
+                                                    <b>Logística responde:</b> {{ $solicitud->transporte->respuesta_coordinador }}
+                                                </div>
+                                            @endif
                                         </div>
                                     @endif
 
@@ -102,12 +109,19 @@
                                             $estR = $solicitud->restaurante->estado_restaurante;
                                             $colR = $estR == 'Pendiente' ? 'yellow' : ($estR == 'Aprobado' ? 'green' : 'red');
                                         @endphp
-                                        <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2 bg-{{ $colR }}-50/50 p-2 rounded-lg border border-{{ $colR }}-100">
-                                            <span class="bg-{{ $colR }}-100 text-{{ $colR }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🍽️ {{ $estR }}</span>
-                                            <div class="text-xs text-{{ $colR }}-900 leading-tight">
-                                                <b>Alimentación:</b> {{ $solicitud->restaurante->num_asistentes }} Personas
-                                                ({{ \Carbon\Carbon::parse($solicitud->restaurante->fecha_hora_evento)->format('d/m/y H:i') }})
+                                        <div class="flex flex-col gap-2 bg-{{ $colR }}-50/50 p-3 rounded-lg border border-{{ $colR }}-200">
+                                            <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2">
+                                                <span class="bg-{{ $colR }}-100 text-{{ $colR }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🍽️ {{ $estR }}</span>
+                                                <div class="text-xs text-{{ $colR }}-900 leading-tight">
+                                                    <b>Alimentación:</b> {{ $solicitud->restaurante->num_asistentes }} Personas
+                                                    ({{ \Carbon\Carbon::parse($solicitud->restaurante->fecha_hora_evento)->format('d/m/y H:i') }})
+                                                </div>
                                             </div>
+                                            @if($solicitud->restaurante->respuesta_cocina)
+                                                <div class="bg-white/60 p-2 rounded text-[11px] text-{{ $colR }}-800 border border-{{ $colR }}-100 italic">
+                                                    <b>Gerencia responde:</b> {{ $solicitud->restaurante->respuesta_cocina }}
+                                                </div>
+                                            @endif
                                         </div>
                                     @endif
 

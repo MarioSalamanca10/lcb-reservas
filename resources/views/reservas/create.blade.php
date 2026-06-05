@@ -20,11 +20,11 @@
                     <img id="preview-imagen" src="https://via.placeholder.com/600x400?text=Selecciona+un+lugar" class="w-full h-full object-cover transform transition-transform duration-500 hover:scale-110">
                     <div class="absolute top-3 right-3 bg-[#4EAA68] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-md">Vista Previa</div>
                 </div>
-                <h2 id="preview-titulo" class="text-2xl font-bold text-[#626366]">Lugar</h2>
+                <h2 id="preview-titulo" class="text-2xl font-bold text-[#626366]">Espacio</h2>
                 <div class="mt-4 space-y-3">
                     <div class="flex items-center text-gray-600 bg-gray-50 p-3 rounded-xl">
                         <span class="text-xl mr-3">👥</span>
-                        <span id="preview-capacidad" class="text-sm font-semibold">- Personas</span>
+                        <span id="preview-capacidad" class="text-sm font-semibold"> Personas</span>
                     </div>
                     <p id="preview-descripcion" class="text-sm text-gray-500 leading-relaxed italic p-3 border-l-4 border-[#4EAA68]/50 bg-gray-50 rounded-r-xl">La descripción aparecerá aquí.</p>
                 </div>
