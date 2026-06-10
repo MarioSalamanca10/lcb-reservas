@@ -61,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/admin/restaurante', [\App\Http\Controllers\RestauranteController::class, 'index'])->name('admin.restaurante.index');
     Route::patch('/admin/restaurante/{id}', [\App\Http\Controllers\RestauranteController::class, 'update'])->name('admin.restaurante.update');
-    
+
     // RUTA EXCLUSIVA PARA EL STAFF DE COCINA
 
     Route::get('/cocina/tablero', [\App\Http\Controllers\CocinaController::class, 'index'])->name('cocina.index');
@@ -78,6 +78,9 @@ Route::middleware(['auth'])->group(function () {
         // Rutas del Tablero y Reservas Generales
         Route::get('/admin/dashboard', [EspacioRecursoController::class, 'dashboard'])->name('admin.dashboard');
         Route::get('/admin/reservas', [ReservaFisicaController::class, 'adminIndex'])->name('admin.reservas.index');
+
+        // PANEL INFORMATIVO PARA ADMIN ESPACIOS
+        Route::get('/admin/reservas', [\App\Http\Controllers\AdminReservaEspacioController::class, 'index'])->name('admin.reservas.index');
 
         // Rutas de Torres
         Route::get('/torres', [TorreController::class, 'index'])->name('torres.index');

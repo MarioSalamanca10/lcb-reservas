@@ -15,7 +15,7 @@ class AdminReservaEspacioController extends Controller
         }
 
         // Traemos las reservas con TODO su ecosistema asociado
-        $query = ReservaFisica::with(['espacio.torre', 'solicitud.transporte', 'solicitud.restaurante', 'encuesta']);
+        $query = ReservaFisica::with(['espacio.torre', 'solicitud.transporte', 'solicitud.restaurante']);
 
         // --- FILTROS ---
         if ($request->filled('fecha')) {

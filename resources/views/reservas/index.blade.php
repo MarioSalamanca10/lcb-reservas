@@ -21,7 +21,6 @@
         <div class="bg-red-50 border border-red-200 text-red-700 p-4 mb-6 rounded-xl font-bold flex items-center gap-3 text-sm">⚠️ {{ session('error') }}</div>
     @endif
 
-    <!-- BARRA DE FILTROS COMPACTA -->
     <div class="bg-white p-3 rounded-xl shadow-sm border border-zinc-200 mb-6 flex flex-wrap gap-3 items-center">
         <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-2">Filtros:</span>
         <form action="{{ route('reservas.index') }}" method="GET" class="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -46,7 +45,6 @@
         </form>
     </div>
 
-    <!-- TABLA DE DATOS DEL DOCENTE -->
     <div class="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
@@ -61,7 +59,6 @@
                     @forelse($solicitudes as $solicitud)
                         <tr class="hover:bg-zinc-50 transition-colors">
                             
-                            <!-- COLUMNA 1: INFO GENERAL -->
                             <td class="p-4 align-top">
                                 <h3 class="font-black text-zinc-800 text-base leading-tight">{{ $solicitud->titulo_evento }}</h3>
                                 <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-2">
@@ -69,13 +66,12 @@
                                 </p>
                             </td>
 
-                            <!-- COLUMNA 2: SERVICIOS Y ESTADO (BADGES) -->
                             <td class="p-4 align-top">
                                 <div class="flex flex-col gap-2">
                                     
                                     @if($solicitud->reservaFisica)
-                                        <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2 bg-indigo-50/50 p-2 rounded-lg border border-indigo-100">
-                                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🏢 Confirmado</span>
+                                        <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2 bg-indigo-50/50 p-3 rounded-lg border border-indigo-100">
+                                            <span class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap shadow-sm">🏢 Confirmado</span>
                                             <div class="text-xs text-indigo-900 leading-tight">
                                                 <b>{{ $solicitud->reservaFisica->espacio->nombre ?? 'N/A' }}</b> 
                                                 ({{ \Carbon\Carbon::parse($solicitud->reservaFisica->fecha_inicio)->format('d/m/y H:i') }})
@@ -90,14 +86,14 @@
                                         @endphp
                                         <div class="flex flex-col gap-2 bg-{{ $colT }}-50/50 p-3 rounded-lg border border-{{ $colT }}-200">
                                             <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2">
-                                                <span class="bg-{{ $colT }}-100 text-{{ $colT }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🚌 {{ $estT }}</span>
+                                                <span class="bg-{{ $colT }}-100 text-{{ $colT }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap shadow-sm">🚌 {{ $estT }}</span>
                                                 <div class="text-xs text-{{ $colT }}-900 leading-tight">
                                                     <b>Destino:</b> {{ $solicitud->transporte->direccion_destino }} 
                                                     ({{ \Carbon\Carbon::parse($solicitud->transporte->fecha_hora_servicio)->format('d/m/y H:i') }})
                                                 </div>
                                             </div>
                                             @if($solicitud->transporte->respuesta_coordinador)
-                                                <div class="bg-white/60 p-2 rounded text-[11px] text-{{ $colT }}-800 border border-{{ $colT }}-100 italic">
+                                                <div class="bg-white p-2 rounded-md text-[11px] text-{{ $colT }}-800 border border-{{ $colT }}-100 italic shadow-sm mt-1">
                                                     <b>Logística responde:</b> {{ $solicitud->transporte->respuesta_coordinador }}
                                                 </div>
                                             @endif
@@ -107,20 +103,35 @@
                                     @if($solicitud->restaurante)
                                         @php 
                                             $estR = $solicitud->restaurante->estado_restaurante;
-                                            $colR = $estR == 'Pendiente' ? 'yellow' : ($estR == 'Aprobado' ? 'green' : 'red');
+                                            // Si está finalizado por cocina, lo pintamos de un gris azulado bonito.
+                                            $colR = $estR == 'Pendiente' ? 'yellow' : ($estR == 'Aprobado' ? 'green' : ($estR == 'Finalizado' ? 'blue' : 'red'));
                                         @endphp
                                         <div class="flex flex-col gap-2 bg-{{ $colR }}-50/50 p-3 rounded-lg border border-{{ $colR }}-200">
                                             <div class="flex items-start sm:items-center flex-col sm:flex-row gap-2">
-                                                <span class="bg-{{ $colR }}-100 text-{{ $colR }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap">🍽️ {{ $estR }}</span>
+                                                <span class="bg-{{ $colR }}-100 text-{{ $colR }}-700 px-2 py-1 rounded text-[10px] font-black uppercase whitespace-nowrap shadow-sm">🍽️ {{ $estR }}</span>
                                                 <div class="text-xs text-{{ $colR }}-900 leading-tight">
                                                     <b>Alimentación:</b> {{ $solicitud->restaurante->num_asistentes }} Personas
                                                     ({{ \Carbon\Carbon::parse($solicitud->restaurante->fecha_hora_evento)->format('d/m/y H:i') }})
                                                 </div>
                                             </div>
+                                            
                                             @if($solicitud->restaurante->respuesta_cocina)
-                                                <div class="bg-white/60 p-2 rounded text-[11px] text-{{ $colR }}-800 border border-{{ $colR }}-100 italic">
-                                                    <b>Gerencia responde:</b> {{ $solicitud->restaurante->respuesta_cocina }}
-                                                </div>
+                                                @php
+                                                    $notaCompleta = $solicitud->restaurante->respuesta_cocina;
+                                                    $notaChef = null;
+                                                    
+                                                    // Si el string contiene la marca del Chef, cortamos el mensaje y guardamos solo esa parte.
+                                                    if(str_contains($notaCompleta, '[Nota Chef]: ')) {
+                                                        $partes = explode('[Nota Chef]: ', $notaCompleta);
+                                                        $notaChef = trim($partes[1]);
+                                                    }
+                                                @endphp
+                                                
+                                                @if($notaChef)
+                                                    <div class="bg-white p-2 rounded-md text-[11px] text-blue-800 border border-blue-200 italic shadow-sm mt-1">
+                                                        <b>👨‍🍳 Chef responde:</b> {{ $notaChef }}
+                                                    </div>
+                                                @endif
                                             @endif
                                         </div>
                                     @endif
@@ -128,7 +139,6 @@
                                 </div>
                             </td>
 
-                            <!-- COLUMNA 3: ACCIONES -->
                             <td class="p-4 align-top text-right">
                                 <div class="flex flex-col items-end gap-2">
                                     <form action="{{ route('reservas.destroy', $solicitud->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de cancelar TODA esta solicitud?');">
@@ -140,7 +150,7 @@
                                     </form>
                                     
                                     @if($solicitud->reservaFisica && !$solicitud->reservaFisica->encuesta_completada && \Carbon\Carbon::parse($solicitud->reservaFisica->fecha_fin)->isPast())
-                                        <a href="{{ route('reservas.encuesta.create', $solicitud->reservaFisica->id) }}" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-colors">
+                                        <a href="{{ route('reservas.encuesta.create', $solicitud->reservaFisica->id) }}" class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-colors shadow-sm">
                                             ⭐ Evaluar
                                         </a>
                                     @endif
@@ -162,7 +172,6 @@
             </table>
         </div>
         
-        <!-- Paginador -->
         @if($solicitudes->hasPages())
             <div class="p-4 border-t border-zinc-200 bg-zinc-50">
                 {{ $solicitudes->links() }}

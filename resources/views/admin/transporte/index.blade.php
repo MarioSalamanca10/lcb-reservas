@@ -14,7 +14,6 @@
         <div class="bg-green-50 border border-green-200 text-green-700 p-4 mb-6 shadow-sm rounded-xl font-bold">✅ {{ session('success') }}</div>
     @endif
 
-    <!-- BARRA DE FILTROS COMPACTA -->
     <div class="bg-white p-3 rounded-xl shadow-sm border border-zinc-200 mb-6 flex flex-wrap gap-3 items-center">
         <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 pl-2">Filtros:</span>
         <form action="{{ route('admin.transporte.index') }}" method="GET" class="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -36,7 +35,6 @@
         </form>
     </div>
 
-    <!-- TABLA DE DATOS ERP -->
     <div class="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
@@ -45,7 +43,7 @@
                         <th class="p-4">Información del Evento</th>
                         <th class="p-4">Logística y Ruta</th>
                         <th class="p-4">Requerimientos</th>
-                        <th class="p-4 w-1/4">Gestión de Estado</th>
+                        <th class="p-4 w-1/4 text-center">Gestión de Estado</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200">
@@ -59,9 +57,8 @@
 
                         <tr class="{{ $rowColor }} hover:bg-zinc-50 transition-colors group">
                             
-                            <!-- COLUMNA 1: INFO -->
                             <td class="p-4 align-top">
-                                <span class="px-2 py-1 rounded text-[10px] font-black tracking-widest {{ $badgeColor }} mb-2 inline-block">
+                                <span class="px-2 py-1 rounded text-[10px] font-black tracking-widest {{ $badgeColor }} mb-2 inline-block shadow-sm">
                                     {{ $estado }}
                                 </span>
                                 <h3 class="font-black text-zinc-800 text-base leading-tight">{{ $trans->solicitud->titulo_evento ?? 'Sin título' }}</h3>
@@ -69,7 +66,6 @@
                                 <p class="text-xs text-zinc-500 mt-1"><b>Responsable:</b> {{ $trans->nombre_responsable }} ({{ $trans->celular_responsable }})</p>
                             </td>
 
-                            <!-- COLUMNA 2: LOGÍSTICA -->
                             <td class="p-4 align-top">
                                 <div class="bg-white/60 p-2 rounded-lg border border-zinc-200/50">
                                     <p class="text-xs font-bold text-zinc-700">📍 {{ $trans->direccion_recogida }}</p>
@@ -80,7 +76,6 @@
                                 <p class="text-[10px] font-bold text-zinc-400 uppercase mt-1">{{ $trans->num_estudiantes }} Estudiantes | {{ $trans->num_adultos }} Adultos</p>
                             </td>
 
-                            <!-- COLUMNA 3: REQUERIMIENTOS -->
                             <td class="p-4 align-top text-xs text-zinc-600">
                                 <p class="font-bold text-zinc-800">{{ is_array($trans->necesidades_servicio) ? implode(', ', $trans->necesidades_servicio) : 'Ninguna' }}</p>
                                 @if($trans->observaciones)
@@ -88,23 +83,32 @@
                                 @endif
                             </td>
 
-                            <!-- COLUMNA 4: EDICIÓN CONTINUA -->
                             <td class="p-4 align-top bg-zinc-50/50">
-                                <form action="{{ route('admin.transporte.update', $trans->id) }}" method="POST" class="flex flex-col gap-2">
-                                    @csrf @method('PATCH')
-                                    
-                                    <select name="estado_transporte" class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs font-bold text-zinc-700 focus:ring-1 focus:ring-[#4EAA68]">
-                                        <option value="Pendiente" {{ $estado == 'Pendiente' ? 'selected' : '' }}>⏳ Pendiente</option>
-                                        <option value="Aprobado" {{ $estado == 'Aprobado' ? 'selected' : '' }}>✅ Aprobado</option>
-                                        <option value="Rechazado" {{ $estado == 'Rechazado' ? 'selected' : '' }}>❌ Rechazado</option>
-                                    </select>
+                                @if($estado == 'Pendiente')
+                                    <form action="{{ route('admin.transporte.update', $trans->id) }}" method="POST" class="flex flex-col gap-2" onsubmit="return confirm('¿Está seguro de su decisión? Esta acción sellará el registro logístico.');">
+                                        @csrf @method('PATCH')
+                                        
+                                        <select name="estado_transporte" class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs font-bold text-zinc-700 focus:ring-1 focus:ring-[#4EAA68]" required>
+                                            <option value="" disabled selected>Evaluar Ruta...</option>
+                                            <option value="Aprobado">✅ Aprobar Ruta</option>
+                                            <option value="Rechazado">❌ Rechazar</option>
+                                        </select>
 
-                                    <textarea name="respuesta_coordinador" rows="2" placeholder="Notas/Asignación interna..." class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs focus:ring-1 focus:ring-[#4EAA68]">{{ $trans->respuesta_coordinador }}</textarea>
-                                    
-                                    <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-[#4EAA68] transition-colors">
-                                        Guardar
-                                    </button>
-                                </form>
+                                        <textarea name="respuesta_coordinador" rows="2" placeholder="Notas/Asignación interna..." class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs focus:ring-1 focus:ring-[#4EAA68]" required></textarea>
+                                        
+                                        <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-[#4EAA68] transition-colors shadow-sm">
+                                            Guardar y Sellar
+                                        </button>
+                                    </form>
+                                @else
+                                    <div class="bg-white border {{ $estado == 'Aprobado' ? 'border-green-200' : 'border-red-200' }} rounded-lg p-3 text-center shadow-sm opacity-80 cursor-not-allowed">
+                                        <span class="block text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Registro Sellado</span>
+                                        <span class="inline-block px-3 py-1 rounded text-xs font-bold {{ $estado == 'Aprobado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                            {{ $estado }}
+                                        </span>
+                                        <p class="text-[10px] text-zinc-500 mt-2 italic leading-tight">{{ $trans->respuesta_coordinador }}</p>
+                                    </div>
+                                @endif
                             </td>
 
                         </tr>
@@ -117,7 +121,6 @@
             </table>
         </div>
         
-        <!-- LINKS DE PAGINACIÓN -->
         @if($transportes->hasPages())
             <div class="p-4 border-t border-zinc-200 bg-zinc-50">
                 {{ $transportes->links() }}
