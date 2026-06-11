@@ -33,6 +33,9 @@
             @if(request()->has('fecha') || request()->has('estado') || request()->has('solicitante'))
                 <a href="{{ route('admin.restaurante.index') }}" class="text-zinc-400 hover:text-red-500 text-xs font-bold px-2 py-1.5 transition-colors">Limpiar</a>
             @endif
+            <button type="submit" formaction="{{ route('admin.restaurante.export') }}" class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 transition-colors flex items-center gap-1 shadow-sm">
+                <span>📊</span> Excel
+            </button>
         </form>
     </div>
 

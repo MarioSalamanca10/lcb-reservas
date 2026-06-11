@@ -17,7 +17,7 @@ class EspacioRecursoController extends Controller
             abort(403, 'Acceso Denegado. Panel exclusivo para Administración de Espacios.');
         }
         // Traemos todos los espacios, pero le exigimos que incluya la 'torre' a la que pertenecen
-        $espacios = \App\Models\Espacio::with('torre')->orderBy('created_at', 'desc')->get();
+        $espacios = \App\Models\Espacio::with('torre')->orderBy('created_at', 'desc')->paginate(10);
         
         return view('espacios.index', compact('espacios'));
     }

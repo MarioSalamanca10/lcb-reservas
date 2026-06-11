@@ -25,7 +25,7 @@
         </div>
     @endif
 
-    <div class="bg-gradient-to-r from-blue-900 to-slate-800 rounded-3xl p-8 mb-10 shadow-2xl relative overflow-hidden border border-blue-400/20">
+    <div class="bg-gradient-to-r from-blue-900 to-slate-800 rounded-3xl p-8 mb-6 shadow-2xl relative overflow-hidden border border-blue-400/20">
         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         
         <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -34,7 +34,7 @@
                     <span class="text-3xl">🚀</span>
                     <h2 class="text-2xl font-black tracking-tight">Carga Masiva de Espacios</h2>
                 </div>
-                <p class="text-blue-200 text-sm">Sube tu archivo .CSV. El sistema creará las Torres y Espacios en un segundo.</p>
+                <p class="text-blue-200 text-sm">Sube tu archivo .CSV. El sistema creará los Espacios en un segundo.</p>
             </div>
 
             <form action="{{ route('espacios.importar') }}" method="POST" enctype="multipart/form-data" class="flex items-center gap-3 bg-white/10 p-2 rounded-2xl backdrop-blur-md border border-white/20">
@@ -45,6 +45,39 @@
                     Importar
                 </button>
             </form>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 mb-10 shadow-sm border border-gray-100">
+        <h3 class="font-black text-sm text-gray-600 uppercase tracking-widest mb-3 flex items-center justify-between">
+            <span>📋 Estructura Obligatoria del Archivo CSV</span>
+            <span class="text-blue-600 text-[11px] normal-case font-bold bg-blue-50 px-3 py-1 rounded-full">⚠️ La primera fila (Cabecera) NO se importa.</span>
+        </h3>
+        <div class="overflow-x-auto border border-gray-200 rounded-xl">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-gray-100 font-bold border-b border-gray-200 text-gray-500">
+                        <th class="p-3 border-r border-gray-200">Col 1: nombre</th>
+                        <th class="p-3 border-r border-gray-200">Col 2: capacidad_personas</th>
+                        <th class="p-3 border-r border-gray-200">Col 3: descripcion</th>
+                        <th class="p-3">Col 4: torre_id</th>
+                    </tr>
+                </thead>
+                <tbody class="text-gray-600 divide-y divide-gray-100 font-mono">
+                    <tr>
+                        <td class="p-3 border-r border-gray-200 bg-gray-50/50">Laboratorio de Robótica</td>
+                        <td class="p-3 border-r border-gray-200 text-center">35</td>
+                        <td class="p-3 border-r border-gray-200">Equipado con pantallas led y kits Lego</td>
+                        <td class="p-3 text-center">2</td>
+                    </tr>
+                    <tr>
+                        <td class="p-3 border-r border-gray-200 bg-gray-50/50">Salón de Música 4</td>
+                        <td class="p-3 border-r border-gray-200 text-center">25</td>
+                        <td class="p-3 border-r border-gray-200">Cuenta con insonorización y pianos</td>
+                        <td class="p-3 text-center">1</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -100,6 +133,10 @@
                 @endforelse
             </tbody>
         </table>
+    </div>
+    
+    <div class="mt-8">
+        {{ $espacios->links() }}
     </div>
 </div>
 @endsection

@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SolicitudRestaurante;
+use App\Exports\RestauranteExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CocinaController extends Controller
 {
@@ -42,5 +44,10 @@ class CocinaController extends Controller
         ]);
 
         return back()->with('success', '¡Pedido marcado como Finalizado y bloqueado en el sistema!');
+    }
+
+    public function exportarExcel(Request $request)
+    {
+        return Excel::download(new RestauranteExport($request->fecha), 'Planilla_Produccion_Cocina.xlsx');
     }
 }

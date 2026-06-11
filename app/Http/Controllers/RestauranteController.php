@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\SolicitudRestaurante;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificacionEstadoServicio;
+use App\Exports\RestauranteExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RestauranteController extends Controller
 {
@@ -77,5 +79,11 @@ class RestauranteController extends Controller
         // --- FIN ENVÍO DE CORREO ---
 
         return back()->with('success', '¡Decisión e instrucciones de cocina guardadas exitosamente!');
+    }
+
+    public function exportarExcel(Request $request)
+    {
+        // Reutilizamos el mismo molde, pero le cambiamos el nombre al archivo a descargar
+        return Excel::download(new RestauranteExport($request->fecha), 'Auditoria_Gerencia_Restaurante.xlsx');
     }
 }

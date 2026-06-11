@@ -1,86 +1,78 @@
 @extends('layouts.app')
-@section('title', 'Solicitar Restaurante')
+@section('title', 'Solicitar Alimentación')
 
 @section('content')
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8 text-left">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#FFDE00]/20 text-yellow-600 mb-4">
-            <span class="text-2xl">🍽️</span>
-        </div>
-        <h1 class="text-3xl sm:text-4xl font-black text-[#626366] tracking-tight">Solicitar Restaurante</h1>
-        <p class="text-gray-500 text-base sm:text-lg mt-2">Gestione la alimentación para reuniones, eventos o visitas en el Liceo.</p>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <div class="mb-8 text-center">
+        <div class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4 shadow-sm">🍽️</div>
+        <h1 class="text-3xl font-black text-[#626366] tracking-tight">Solicitar Alimentación</h1>
+        <p class="text-gray-500 text-sm mt-2">Gestione refrigerios, almuerzos o servicios de café para reuniones que NO requieran reservar un salón.</p>
     </div>
 
-    @if(session('success'))
-        <div class="bg-[#4EAA68]/20 border-l-4 border-[#4EAA68] text-[#4EAA68] p-4 mb-6 shadow-sm rounded-2xl font-bold">
-            ✅ {{ session('success') }}
-        </div>
-    @endif
     @if(session('error'))
-        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 shadow-sm rounded-2xl font-bold">
-            ❌ {{ session('error') }}
+        <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 shadow-sm rounded-2xl font-bold flex items-center gap-3">
+            <span class="text-2xl">⚠️</span> {{ session('error') }}
         </div>
     @endif
 
-    <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-xl border border-gray-100">
-        
-        <!-- Alerta de Proceso -->
-        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-2xl mb-8 flex items-start gap-4 shadow-inner">
-            <div class="bg-white p-2 rounded-full shadow-sm"><span class="text-xl">⚠️</span></div>
-            <div>
-                <h4 class="font-black text-yellow-800 text-sm uppercase tracking-widest mb-1">Proceso de Autorización</h4>
-                <p class="text-sm text-yellow-700 font-medium leading-relaxed">Toda solicitud de alimentación ingresa en estado <b class="font-black">Pendiente</b>. Será revisada por Gerencia Operativa, quien autorizará a Cocina su preparación. Por favor, realice su pedido con el tiempo de antelación estipulado por el Liceo.</p>
-            </div>
-        </div>
+    <div class="bg-white p-6 sm:p-10 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.02] pointer-events-none"></div>
 
-        <form action="{{ route('servicios.restaurante.store') }}" method="POST" class="space-y-8">
+        <form action="{{ route('servicios.restaurante.store') }}" method="POST" class="space-y-8 relative z-10">
             @csrf 
             
-            <!-- Título General del Evento -->
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Asunto o Motivo de la Solicitud</label>
-                <input type="text" name="titulo" required value="{{ old('titulo') }}" placeholder="Ej: Refrigerio Junta de Profesores Ciencias" class="w-full bg-gray-50 border-none focus:ring-2 focus:ring-[#FFDE00] rounded-2xl p-4 text-[#626366] font-medium transition-all">
+            <div class="bg-gray-50/50 p-6 rounded-2xl border border-gray-100 shadow-sm">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Motivo del Evento / Título</label>
+                <input type="text" name="titulo" required value="{{ old('titulo') }}" placeholder="Ej: Comité Directivo Semanal, Desayuno de Trabajo..." class="w-full bg-white border border-gray-200 focus:ring-2 focus:ring-[#FFDE00] rounded-xl p-4 text-[#626366] font-bold transition-all shadow-sm text-lg">
             </div>
 
-            <!-- Datos del Servicio -->
-            <div class="bg-slate-50 border border-slate-200 p-6 rounded-3xl">
-                <h3 class="text-lg font-bold text-[#626366] mb-4 flex items-center gap-2">
-                    <span class="text-yellow-500">📅</span> Detalles del Servicio
-                </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-yellow-50/40 p-6 rounded-2xl border border-[#FFDE00]/50 shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Fecha y Hora de Entrega</label>
-                        <input type="text" id="rest_fecha_hora" name="rest_fecha_hora" required value="{{ old('rest_fecha_hora') }}" placeholder="Seleccione cuándo necesita los alimentos..." class="calendario-hora w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#FFDE00] cursor-pointer">
+                        <input type="text" id="rest_fecha_hora" name="rest_fecha_hora" required value="{{ old('rest_fecha_hora') }}" placeholder="Click para agendar..." class="w-full bg-white border border-yellow-200 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FFDE00] shadow-sm cursor-pointer">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Número de Asistentes</label>
-                        <input type="number" min="1" name="rest_asistentes" required value="{{ old('rest_asistentes') }}" placeholder="Ej: 15" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#FFDE00]">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Cantidad de Asistentes</label>
+                        <input type="number" min="1" name="rest_asistentes" required value="{{ old('rest_asistentes') }}" placeholder="Ej: 40" class="w-full bg-white border border-yellow-200 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FFDE00] shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿Quién Aprueba el Presupuesto?</label>
+                        <select name="rest_aprobador_id" required class="w-full bg-white border border-yellow-200 rounded-xl p-3.5 text-sm font-bold focus:ring-2 focus:ring-[#FFDE00] shadow-sm text-yellow-900 cursor-pointer">
+                            <option value="">Seleccione Gerencia...</option>
+                            <option value="Gerencia Académica" {{ old('rest_aprobador_id') == 'Gerencia Académica' ? 'selected' : '' }}>Gerencia Académica</option>
+                            <option value="Gerencia Administrativa" {{ old('rest_aprobador_id') == 'Gerencia Administrativa' ? 'selected' : '' }}>Gerencia Administrativa</option>
+                            <option value="Gerencia Operativa" {{ old('rest_aprobador_id') == 'Gerencia Operativa' ? 'selected' : '' }}>Gerencia Operativa</option>
+                        </select>
                     </div>
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Servicios Requeridos (Puede marcar varios)</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        @php $servicios_rest = ['Desayuno', 'Onces', 'Pasabocas', 'Brunch', 'Almuerzo', 'Cena', 'Estación de café', 'Hidratación']; @endphp
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Tipo de Servicio (Múltiple)</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        @php 
+                            $servicios_rest = ['Desayuno', 'Onces', 'Pasabocas', 'Almuerzo', 'Cena', 'Estación de café']; 
+                            $old_rest = old('rest_servicios', []);
+                        @endphp
                         @foreach($servicios_rest as $srv)
-                        <label class="flex items-center space-x-3 cursor-pointer group bg-white border border-gray-100 p-3 rounded-xl hover:border-[#FFDE00] transition-colors shadow-sm">
-                            <input type="checkbox" name="rest_servicios[]" value="{{ $srv }}" class="h-5 w-5 text-yellow-500 border-gray-300 rounded focus:ring-[#FFDE00] transition-all">
-                            <span class="text-sm font-semibold text-gray-600 group-hover:text-yellow-700 transition">{{ $srv }}</span>
+                        <label class="flex items-center space-x-3 text-sm font-bold text-gray-700 bg-white p-3 rounded-xl border border-yellow-100 shadow-sm hover:border-yellow-400 transition cursor-pointer">
+                            <input type="checkbox" name="rest_servicios[]" value="{{ $srv }}" {{ in_array($srv, $old_rest) ? 'checked' : '' }} class="rounded w-4 h-4 text-yellow-500 focus:ring-[#FFDE00]">
+                            <span>{{ $srv }}</span>
                         </label>
                         @endforeach
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Dietas Especiales y Detalles Logísticos</label>
-                    <textarea name="rest_detalles" rows="3" placeholder="Ej: 2 almuerzos vegetarianos, entregar en la sala de juntas, incluir servilletas extra..." class="w-full bg-white border border-gray-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-[#FFDE00] transition-all">{{ old('rest_detalles') }}</textarea>
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Dietas Especiales, Lugar de Entrega y Detalles</label>
+                    <textarea name="rest_detalles" rows="3" placeholder="Ej: Entregar en la sala de profesores. 2 almuerzos vegetarianos. El refrigerio debe incluir fruta..." class="w-full bg-white border border-yellow-200 rounded-xl p-4 text-sm font-medium focus:ring-2 focus:ring-[#FFDE00] shadow-sm resize-none">{{ old('rest_detalles') }}</textarea>
                 </div>
             </div>
 
             <div class="flex justify-end pt-4">
-                <button type="submit" class="w-full sm:w-auto bg-[#FFDE00] hover:bg-yellow-400 text-[#626366] font-black py-4 px-10 rounded-2xl transition-all shadow-xl hover:shadow-yellow-300/40 active:scale-95">
-                    Enviar Solicitud a Gerencia
+                <button type="submit" class="w-full sm:w-auto bg-[#FFDE00] hover:bg-[#e6c800] text-yellow-900 font-black text-base py-4 px-10 rounded-2xl transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3">
+                    <span>🍽️</span> Enviar Pedido a Cocina
                 </button>
             </div>
         </form>
@@ -89,13 +81,14 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        flatpickr("#rest_fecha_hora", { 
-            locale: "es", 
+        flatpickr("#rest_fecha_hora", {
+            locale: "es",
+            disable: [ function(date) { return (date.getDay() === 0); } ],
             enableTime: true, 
-            dateFormat: "Y-m-d H:i", 
-            minDate: "today", 
-            disable: [ function(date) { return (date.getDay() === 0); } ] 
+            dateFormat: "Y-m-d h:i K",
+            minDate: "today"
         });
     });
 </script>
+
 @endsection

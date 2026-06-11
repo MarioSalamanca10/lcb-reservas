@@ -32,6 +32,9 @@
             @if(request()->has('fecha') || request()->has('estado') || request()->has('solicitante'))
                 <a href="{{ route('admin.transporte.index') }}" class="text-zinc-400 hover:text-red-500 text-xs font-bold px-2 py-1.5 transition-colors">Limpiar</a>
             @endif
+            <button type="submit" formaction="{{ route('admin.transporte.export') }}" class="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 transition-colors flex items-center gap-1 shadow-sm">
+                <span>📊</span> Excel
+            </button>
         </form>
     </div>
 
@@ -43,14 +46,13 @@
                         <th class="p-4">Información del Evento</th>
                         <th class="p-4">Logística y Ruta</th>
                         <th class="p-4">Requerimientos</th>
-                        <th class="p-4 w-1/4 text-center">Gestión de Estado</th>
+                        <th class="p-4 w-1/3 min-w-[300px] text-center">Gestión de Estado</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-200">
                     @forelse($transportes as $trans)
                         @php
                             $estado = $trans->estado_transporte;
-                            // COHERENCIA DE COLOR EN TODA LA FILA
                             $rowColor = $estado == 'Aprobado' ? 'bg-green-50/50' : ($estado == 'Rechazado' ? 'bg-red-50/50' : 'bg-white');
                             $badgeColor = $estado == 'Aprobado' ? 'bg-green-200 text-green-800' : ($estado == 'Rechazado' ? 'bg-red-200 text-red-800' : 'bg-yellow-200 text-yellow-800');
                         @endphp
@@ -83,7 +85,7 @@
                                 @endif
                             </td>
 
-                            <td class="p-4 align-top bg-zinc-50/50">
+                            <td class="p-4 align-top bg-zinc-50/50 min-w-[300px]">
                                 @if($estado == 'Pendiente')
                                     <form action="{{ route('admin.transporte.update', $trans->id) }}" method="POST" class="flex flex-col gap-2" onsubmit="return confirm('¿Está seguro de su decisión? Esta acción sellará el registro logístico.');">
                                         @csrf @method('PATCH')
@@ -94,9 +96,9 @@
                                             <option value="Rechazado">❌ Rechazar</option>
                                         </select>
 
-                                        <textarea name="respuesta_coordinador" rows="2" placeholder="Notas/Asignación interna..." class="w-full bg-white border border-zinc-300 rounded-md px-2 py-1.5 text-xs focus:ring-1 focus:ring-[#4EAA68]" required></textarea>
+                                        <textarea name="respuesta_coordinador" rows="4" placeholder="Notas importantes, placas del vehículo o conductor asignado..." class="w-full bg-white border border-zinc-300 rounded-md px-3 py-2 text-xs focus:ring-1 focus:ring-[#4EAA68] resize-none" required></textarea>
                                         
-                                        <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-[#4EAA68] transition-colors shadow-sm">
+                                        <button type="submit" class="w-full bg-zinc-800 text-white text-[10px] font-black uppercase tracking-widest py-2 rounded-md hover:bg-[#4EAA68] transition-colors shadow-sm mt-1">
                                             Guardar y Sellar
                                         </button>
                                     </form>
@@ -106,7 +108,7 @@
                                         <span class="inline-block px-3 py-1 rounded text-xs font-bold {{ $estado == 'Aprobado' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
                                             {{ $estado }}
                                         </span>
-                                        <p class="text-[10px] text-zinc-500 mt-2 italic leading-tight">{{ $trans->respuesta_coordinador }}</p>
+                                        <p class="text-xs text-zinc-700 mt-2 italic leading-relaxed text-left border-l-2 {{ $estado == 'Aprobado' ? 'border-green-300' : 'border-red-300' }} pl-2">"{{ $trans->respuesta_coordinador }}"</p>
                                     </div>
                                 @endif
                             </td>

@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\SolicitudTransporte;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificacionEstadoServicio;
+use App\Exports\TransporteExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TransporteController extends Controller
 {
@@ -63,5 +65,13 @@ class TransporteController extends Controller
         // --- FIN ENVÍO DE CORREO ---
 
         return back()->with('success', '¡Estado y datos logísticos del transporte actualizados correctamente!');
+    }
+    public function exportarExcel(Request $request)
+    {
+        return Excel::download(new TransporteExport(
+            $request->fecha, 
+            $request->estado, 
+            $request->solicitante
+        ), 'Planilla_Rutas_LCB.xlsx');
     }
 }

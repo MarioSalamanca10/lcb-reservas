@@ -116,13 +116,53 @@ class ReservaFisicaController extends Controller
         try {
             DB::beginTransaction();
 
-            foreach ($fechasAProcesar as $fechaActual) {
-                $solicitud = SolicitudGeneral::create([
-                    'correo_solicitante' => auth()->user()->email,
-                    'titulo_evento' => $request->titulo,
-                    'estado_global' => 'Aprobado' 
-                ]);
+            // ==========================================
+            // 1. CREAR EL TICKET PADRE (Una sola vez)
+            // ==========================================
+            $solicitud = SolicitudGeneral::create([
+                'correo_solicitante' => auth()->user()->email,
+                'titulo_evento' => $request->titulo,
+                'estado_global' => 'Aprobado' 
+            ]);
 
+            // ==========================================
+            // 2. CREAR TRANSPORTE Y RESTAURANTE (Una sola vez)
+            // ==========================================
+            if ($request->filled('requiere_transporte')) {
+                \App\Models\SolicitudTransporte::create([
+                    'solicitud_id' => $solicitud->id,
+                    'nombre_responsable' => $request->trans_responsable,
+                    'celular_responsable' => $request->trans_celular,
+                    'area_solicitante' => $request->trans_area,
+                    'fecha_hora_servicio' => $request->trans_salida,
+                    'direccion_recogida' => $request->trans_dir_recogida,
+                    'direccion_destino' => $request->trans_dir_destino,
+                    'direccion_regreso' => $request->trans_dir_regreso,
+                    'fecha_hora_regreso' => $request->trans_regreso,
+                    'num_estudiantes' => $request->trans_estudiantes ?? 0,
+                    'num_adultos' => $request->trans_adultos ?? 0,
+                    'necesidades_servicio' => $request->trans_necesidades ?? [],
+                    'observaciones' => $request->trans_observaciones,
+                    'estado_transporte' => 'Pendiente'
+                ]);
+            }
+
+            if ($request->filled('requiere_restaurante')) {
+                \App\Models\SolicitudRestaurante::create([
+                    'solicitud_id' => $solicitud->id,
+                    'fecha_hora_evento' => $request->rest_fecha_hora,
+                    'num_asistentes' => $request->rest_asistentes,
+                    'servicio_requerido' => $request->rest_servicios ?? [],
+                    'detalles_solicitud' => $request->rest_detalles,
+                    'aprobador_id' => $request->filled('rest_aprobador_id') ? $request->rest_aprobador_id : null, 
+                    'estado_restaurante' => 'Pendiente'
+                ]);
+            }
+
+            // ==========================================
+            // 3. CREAR LOS DÍAS DE RESERVA EN EL BUCLE (Hijos)
+            // ==========================================
+            foreach ($fechasAProcesar as $fechaActual) {
                 ReservaFisica::create([
                     'solicitud_id' => $solicitud->id,
                     'espacio_id' => $request->espacio_id,
@@ -134,37 +174,6 @@ class ReservaFisicaController extends Controller
                     'observaciones' => $request->observaciones,
                     'encuesta_completada' => false
                 ]);
-
-                if ($request->filled('requiere_transporte')) {
-                    \App\Models\SolicitudTransporte::create([
-                        'solicitud_id' => $solicitud->id,
-                        'nombre_responsable' => $request->trans_responsable,
-                        'celular_responsable' => $request->trans_celular,
-                        'area_solicitante' => $request->trans_area,
-                        'fecha_hora_servicio' => $request->trans_salida,
-                        'direccion_recogida' => $request->trans_dir_recogida,
-                        'direccion_destino' => $request->trans_dir_destino,
-                        'direccion_regreso' => $request->trans_dir_regreso,
-                        'fecha_hora_regreso' => $request->trans_regreso,
-                        'num_estudiantes' => $request->trans_estudiantes ?? 0,
-                        'num_adultos' => $request->trans_adultos ?? 0,
-                        'necesidades_servicio' => $request->trans_necesidades ?? [],
-                        'observaciones' => $request->trans_observaciones,
-                        'estado_transporte' => 'Pendiente'
-                    ]);
-                }
-
-                if ($request->filled('requiere_restaurante')) {
-                    \App\Models\SolicitudRestaurante::create([
-                        'solicitud_id' => $solicitud->id,
-                        'fecha_hora_evento' => $request->rest_fecha_hora,
-                        'num_asistentes' => $request->rest_asistentes,
-                        'servicio_requerido' => $request->rest_servicios ?? [],
-                        'detalles_solicitud' => $request->rest_detalles,
-                        'aprobador_id' => $request->filled('rest_aprobador_id') ? $request->rest_aprobador_id : null, // Solución al error rojo
-                        'estado_restaurante' => 'Pendiente'
-                    ]);
-                }
             }
 
             DB::commit();
@@ -180,8 +189,8 @@ class ReservaFisicaController extends Controller
     {
         $usuario = auth()->user();
         
-        // Llamamos al Ticket Padre y le pedimos que traiga a todos los hijos
-        $query = SolicitudGeneral::with(['reservaFisica.espacio.torre', 'transporte', 'restaurante']);
+        // Llamamos al Ticket Padre y le pedimos que traiga a todos los hijos (Notar el plural en reservasFisicas)
+        $query = SolicitudGeneral::with(['reservasFisicas.espacio.torre', 'transporte', 'restaurante']);
 
         // Si NO es Super Admin, filtramos para que solo vea sus propios tickets
         if ($usuario->rol !== 'admin') {
@@ -191,7 +200,7 @@ class ReservaFisicaController extends Controller
         // --- SISTEMA DE FILTROS ---
         if ($request->filled('categoria')) {
             if ($request->categoria === 'espacios') {
-                $query->has('reservaFisica');
+                $query->has('reservasFisicas'); // Cambio a Plural
             } elseif ($request->categoria === 'transporte') {
                 $query->has('transporte');
             } elseif ($request->categoria === 'restaurante') {
@@ -241,18 +250,23 @@ class ReservaFisicaController extends Controller
     public function destroy($id)
     {
         $usuario = auth()->user();
-        $solicitud = SolicitudGeneral::with(['reservaFisica', 'transporte', 'restaurante'])->findOrFail($id);
+        // Llamamos a reservasFisicas en plural
+        $solicitud = SolicitudGeneral::with(['reservasFisicas', 'transporte', 'restaurante'])->findOrFail($id);
 
         if ($usuario->rol !== 'admin' && $usuario->email !== $solicitud->correo_solicitante) {
             return back()->with('error', 'No tienes permiso para cancelar esta solicitud.');
         }
 
         // Regla de Negocio: Validar tiempo (Mínimo 24 horas de anticipación)
-        // Buscamos la fecha más próxima entre los servicios que tenga
+        // Buscamos la fecha más próxima de las reservas
         $fechaEvento = null;
-        if ($solicitud->reservaFisica) $fechaEvento = $solicitud->reservaFisica->fecha_inicio;
-        elseif ($solicitud->transporte) $fechaEvento = $solicitud->transporte->fecha_hora_servicio;
-        elseif ($solicitud->restaurante) $fechaEvento = $solicitud->restaurante->fecha_hora_evento;
+        if ($solicitud->reservasFisicas->isNotEmpty()) {
+            $fechaEvento = $solicitud->reservasFisicas->min('fecha_inicio');
+        } elseif ($solicitud->transporte) {
+            $fechaEvento = $solicitud->transporte->fecha_hora_servicio;
+        } elseif ($solicitud->restaurante) {
+            $fechaEvento = $solicitud->restaurante->fecha_hora_evento;
+        }
 
         if ($fechaEvento && $usuario->rol !== 'admin') {
             $horasFaltantes = \Carbon\Carbon::now()->diffInHours(\Carbon\Carbon::parse($fechaEvento), false);
@@ -262,7 +276,7 @@ class ReservaFisicaController extends Controller
         }
 
         // Borrado en Cascada manual por seguridad (Borra hijos y luego padre)
-        if ($solicitud->reservaFisica) $solicitud->reservaFisica()->delete();
+        if ($solicitud->reservasFisicas()->exists()) $solicitud->reservasFisicas()->delete();
         if ($solicitud->transporte) $solicitud->transporte()->delete();
         if ($solicitud->restaurante) $solicitud->restaurante()->delete();
         $solicitud->delete();
@@ -270,68 +284,182 @@ class ReservaFisicaController extends Controller
         return back()->with('success', 'La solicitud ha sido cancelada exitosamente en todos sus módulos.');
     }
 
-    public function showEncuestaForm(ReservaFisica $reserva)
+    public function showEncuestaForm(Request $request, $id)
     {
-        if ($reserva->solicitud->correo_solicitante !== auth()->user()->email) {
-            return redirect()->route('reservas.index')->with('error', 'LCB Reservas: No tienes permiso para evaluar esta reserva.');
+        // 1. Buscamos el Ticket Padre (Solicitud General) con todos sus hijos
+        $solicitud = \App\Models\SolicitudGeneral::with(['reservasFisicas', 'transporte', 'restaurante'])->findOrFail($id);
+
+        // 2. Seguridad: Solo el creador de la solicitud puede evaluarla
+        if ($solicitud->correo_solicitante !== auth()->user()->email) {
+            return redirect()->route('reservas.index')->with('error', 'LCB Reservas: No tienes permiso para evaluar esta solicitud.');
         }
 
+        // 3. Identificamos qué botón presionó el usuario (Si no manda nada, asumimos que es Espacios)
+        $modulo = $request->query('modulo', 'Espacios');
+        
+        $fechaFin = null;
+        $horaFin = null;
+
+        // 4. Lógica de Tiempos Dinámica (Calcula a qué hora termina el evento según el servicio)
+        if ($modulo == 'Espacios' && $solicitud->reservasFisicas->isNotEmpty()) {
+            // Si el evento dura varios días, buscamos el último día para habilitar la encuesta
+            $ultimaReserva = $solicitud->reservasFisicas->sortByDesc('fecha_fin')->first();
+            $fechaFin = $ultimaReserva->fecha_fin;
+            $horaFin = $ultimaReserva->hora_fin;
+
+        } elseif ($modulo == 'Transporte' && $solicitud->transporte) {
+            // Si es un viaje de ida y vuelta, usamos el regreso. Si es solo ida, usamos la salida.
+            $fechaFinObj = \Carbon\Carbon::parse($solicitud->transporte->fecha_hora_regreso ?? $solicitud->transporte->fecha_hora_servicio);
+            $fechaFin = $fechaFinObj->format('Y-m-d');
+            $horaFin = $fechaFinObj->format('H:i:s');
+
+        } elseif ($modulo == 'Restaurante' && $solicitud->restaurante) {
+            // Usamos la hora a la que se entregó la comida
+            $fechaFinObj = \Carbon\Carbon::parse($solicitud->restaurante->fecha_hora_evento);
+            $fechaFin = $fechaFinObj->format('Y-m-d');
+            // Le sumamos 1 hora a la entrega para que puedan comer antes de evaluar
+            $horaFin = $fechaFinObj->addHour()->format('H:i:s'); 
+
+        } else {
+            return redirect()->route('reservas.index')->with('error', 'El servicio que intentas evaluar no existe en esta solicitud.');
+        }
+
+        // 5. Validación Estricta de Tiempo
         $fechaHoy = now()->format('Y-m-d');
         $horaActual = now()->format('H:i:s');
         $aunNoTermina = false;
 
-        if ($reserva->fecha_fin > $fechaHoy) {
+        if ($fechaFin > $fechaHoy) {
             $aunNoTermina = true; 
-        } elseif ($reserva->fecha_fin == $fechaHoy && $reserva->hora_fin >= $horaActual) {
+        } elseif ($fechaFin == $fechaHoy && $horaFin >= $horaActual) {
             $aunNoTermina = true; 
         }
 
         if ($aunNoTermina) {
-            return redirect()->route('reservas.index')->with('error', 'LCB Reservas: Todavía no puedes evaluar esta reunión, debes esperar a que finalice la hora programada.');
+            return redirect()->route('reservas.index')
+                ->with('error', 'LCB Reservas: Todavía no puedes evaluar el servicio de ' . $modulo . '. Debes esperar a que finalice.');
         }
 
-        return view('reservas.encuesta', compact('reserva'));
+        // 6. Si ya pasó la hora, le mostramos el súper formulario de estrellas
+        return view('reservas.encuesta', compact('solicitud', 'modulo'));
     }
 
-    public function storeEncuesta(Request $request, ReservaFisica $reserva)
+    public function storeEncuesta(Request $request, $id)
     {
         $request->validate([
-            'calificacion_aseo' => 'required|integer|min:1|max:5',
-            'calificacion_recursos' => 'required|integer|min:1|max:5',
-            'calificacion_horarios' => 'required|integer|min:1|max:5',
+            'modulo_evaluado' => 'required|string',
+            'calificacion_general' => 'required|integer|min:1|max:5',
             'observaciones' => 'nullable|string',
         ]);
 
-        $detalles = [
-            'calificacion_aseo' => $request->calificacion_aseo,
-            'calificacion_recursos' => $request->calificacion_recursos,
-            'calificacion_horarios' => $request->calificacion_horarios,
-            'evaluado_el' => now()->toDateTimeString(),
-        ];
+        // 🚀 TRUCO AUTO-REPARABLE: Si Laravel está pasando el ID del Salón por error de ruta, buscamos el ID del Ticket Padre.
+        $reserva = \App\Models\ReservaFisica::find($id);
+        $solicitudId = $reserva ? $reserva->solicitud_id : $id;
+
+        $detalles = []; 
+        $notaFinal = $request->calificacion_general;
+
+        if ($request->modulo_evaluado == 'Espacios') {
+            $request->validate([
+                'respuestas_detalladas.limpieza' => 'required|integer|min:1|max:5',
+                'respuestas_detalladas.equipos' => 'required|integer|min:1|max:5',
+                'respuestas_detalladas.puntualidad' => 'required|integer|min:1|max:5',
+            ]);
+
+            $detalles = [
+                'limpieza' => $request->respuestas_detalladas['limpieza'],
+                'equipos' => $request->respuestas_detalladas['equipos'],
+                'puntualidad' => $request->respuestas_detalladas['puntualidad'],
+                'evaluado_el' => now()->toDateTimeString(),
+            ];
+
+            // Promediamos
+            $notaFinal = round(($detalles['limpieza'] + $detalles['equipos'] + $detalles['puntualidad']) / 3);
+        }
 
         try {
-            DB::beginTransaction();
+            \Illuminate\Support\Facades\DB::beginTransaction();
 
-            DB::table('encuestas_satisfaccion')->insert([
-                'solicitud_id' => $reserva->solicitud_id,
-                'modulo_evaluado' => 'Espacios',
-                'calificacion_general' => round(($request->calificacion_aseo + $request->calificacion_recursos + $request->calificacion_horarios) / 3),
+            // Insertamos apuntando al ID Padre correcto siempre
+            \Illuminate\Support\Facades\DB::table('encuestas_satisfaccion')->insert([
+                'solicitud_id' => $solicitudId, 
+                'modulo_evaluado' => $request->modulo_evaluado,
+                'calificacion_general' => $notaFinal,
                 'respuestas_detalladas' => json_encode($detalles),
                 'observaciones' => $request->observaciones,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
 
-            $reserva->update([
-                'encuesta_completada' => true
-            ]);
+            if ($request->modulo_evaluado == 'Espacios') {
+                \App\Models\ReservaFisica::where('solicitud_id', $solicitudId)->update([
+                    'encuesta_completada' => true
+                ]);
+            }
 
-            DB::commit();
+            \Illuminate\Support\Facades\DB::commit();
         } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Hubo un error al procesar tu encuesta. Intenta nuevamente.');
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Error al procesar tu encuesta: ' . $e->getMessage());
         }
 
-        return redirect()->route('reservas.index')->with('success', '¡Gracias por tu feedback! Tus respuestas han sido guardadas y el espacio ha sido liberado exitosamente.');
+        return redirect()->route('reservas.index')->with('success', '¡Gracias por calificar el servicio de ' . $request->modulo_evaluado . '!');
+    }
+    
+    public function checkDisponibilidad(Request $request)
+    {
+        try {
+            $espacio_id = $request->espacio_id;
+            $fecha_inicio = $request->fecha_inicio;
+            $fecha_fin = $request->fecha_fin ?: $fecha_inicio;
+            $frecuencia = $request->frecuencia ?? 'unica';
+
+            if (!$espacio_id || !$fecha_inicio) {
+                return response()->json([]);
+            }
+
+            $fechasInvolucradas = [];
+            $currentDate = \Carbon\Carbon::parse($fecha_inicio);
+            $endDate = \Carbon\Carbon::parse($fecha_fin);
+
+            // Tope máximo de 1 año para evitar ciclos infinitos
+            if ($currentDate->diffInDays($endDate) > 365) {
+                $endDate = $currentDate->copy()->addDays(365);
+            }
+
+            // Calculamos exactamente qué días caen en la recurrencia
+            while ($currentDate->lte($endDate)) {
+                $fechasInvolucradas[] = $currentDate->format('Y-m-d');
+                if ($frecuencia === 'semanal') {
+                    $currentDate->addDays(7);
+                } elseif ($frecuencia === 'quincenal') {
+                    $currentDate->addDays(14);
+                } else {
+                    $currentDate->addDay();
+                }
+            }
+
+            // Usamos whereDate que es indestructible contra el formato DATETIME de MySQL
+            $reservas = \App\Models\ReservaFisica::where('espacio_id', $espacio_id)
+                ->where(function($q) use ($fechasInvolucradas) {
+                    foreach($fechasInvolucradas as $f) {
+                        $q->orWhereDate('fecha_inicio', $f);
+                    }
+                })
+                ->get(['fecha_inicio', 'hora_inicio', 'hora_fin']);
+
+            // Limpiamos los datos antes de enviarlos a JavaScript para asegurar compatibilidad
+            $reservas->transform(function($reserva) {
+                $reserva->fecha_inicio = \Carbon\Carbon::parse($reserva->fecha_inicio)->format('Y-m-d');
+                $reserva->hora_inicio = \Carbon\Carbon::parse($reserva->hora_inicio)->format('H:i');
+                $reserva->hora_fin = \Carbon\Carbon::parse($reserva->hora_fin)->format('H:i');
+                return $reserva;
+            });
+
+            return response()->json($reservas);
+            
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

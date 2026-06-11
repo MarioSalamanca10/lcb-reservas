@@ -43,5 +43,11 @@
             </td>
         </tr>
     </table>
+
+    <div style="text-align: center; margin-top: 30px;">
+    <a href="{{ url('/admin/restaurante') }}" style="background-color: #4EAA68; color: white; padding: 12px 25px; text-decoration: none; font-weight: bold; border-radius: 8px; display: inline-block;">
+        Revisar en la Plataforma
+    </a>
+</div>
 </body>
 </html>
