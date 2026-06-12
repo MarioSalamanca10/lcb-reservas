@@ -57,27 +57,28 @@
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-gray-100 font-bold border-b border-gray-200 text-gray-500">
-                        <th class="p-3 border-r border-gray-200">Col 1: nombre</th>
-                        <th class="p-3 border-r border-gray-200">Col 2: capacidad_personas</th>
-                        <th class="p-3 border-r border-gray-200">Col 3: descripcion</th>
-                        <th class="p-3">Col 4: torre_id</th>
+                        <th class="p-3 border-r border-gray-200">Col 1: recurso (Nombre)</th>
+                        <th class="p-3 border-r border-gray-200">Col 2: capacidad</th>
+                        <th class="p-3 border-r border-gray-200">Col 3: estado</th>
+                        <th class="p-3 text-blue-600">Col 4: torre (Nombre)</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-600 divide-y divide-gray-100 font-mono">
                     <tr>
                         <td class="p-3 border-r border-gray-200 bg-gray-50/50">Laboratorio de Robótica</td>
                         <td class="p-3 border-r border-gray-200 text-center">35</td>
-                        <td class="p-3 border-r border-gray-200">Equipado con pantallas led y kits Lego</td>
-                        <td class="p-3 text-center">2</td>
+                        <td class="p-3 border-r border-gray-200 text-center">ACTIVO</td>
+                        <td class="p-3 text-center text-blue-600 font-bold">Bloque de Ciencias</td>
                     </tr>
                     <tr>
                         <td class="p-3 border-r border-gray-200 bg-gray-50/50">Salón de Música 4</td>
                         <td class="p-3 border-r border-gray-200 text-center">25</td>
-                        <td class="p-3 border-r border-gray-200">Cuenta con insonorización y pianos</td>
-                        <td class="p-3 text-center">1</td>
+                        <td class="p-3 border-r border-gray-200 text-center">INACTIVO</td>
+                        <td class="p-3 text-center text-blue-600 font-bold">Bloque de Artes</td>
                     </tr>
                 </tbody>
             </table>
+            <p class="text-xs text-gray-500 mt-3 p-3 bg-gray-50 rounded-b-xl italic">💡 Tip: Escribe el nombre exacto de la Torre en la columna 4. Si la Torre no existe, el sistema la creará automáticamente por ti.</p>
         </div>
     </div>
 

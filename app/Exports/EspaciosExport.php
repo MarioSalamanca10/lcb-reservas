@@ -12,26 +12,14 @@ use Carbon\Carbon;
 class EspaciosExport implements FromQuery, WithHeadings, WithMapping
 {
     use Exportable;
-
     protected $fecha, $torre_id, $docente;
 
-    public function __construct($fecha, $torre_id, $docente)
-    {
-        $this->fecha = $fecha;
-        $this->torre_id = $torre_id;
-        $this->docente = $docente;
+    public function __construct($fecha, $torre_id, $docente) {
+        $this->fecha = $fecha; $this->torre_id = $torre_id; $this->docente = $docente;
     }
 
-    public function query()
-    {
-        // Traemos todo el ecosistema, incluyendo la nueva encuesta
-        $query = ReservaFisica::query()->with([
-            'espacio.torre', 
-            'solicitud.transporte', 
-            'solicitud.restaurante', 
-            'solicitud.encuestaEspacio'
-        ]);
-
+    public function query() {
+        $query = ReservaFisica::query()->with(['espacio.torre', 'solicitud.transporte', 'solicitud.restaurante', 'solicitud.encuestaEspacio']);
         if ($this->fecha) { $query->whereDate('fecha_inicio', $this->fecha); }
         if ($this->torre_id) { $query->whereHas('espacio', function($q) { $q->where('torre_id', $this->torre_id); }); }
         if ($this->docente) {
@@ -40,23 +28,18 @@ class EspaciosExport implements FromQuery, WithHeadings, WithMapping
                   ->orWhereHas('solicitud', function($sq) { $sq->where('correo_solicitante', 'like', '%' . $this->docente . '%'); });
             });
         }
-
         return $query->orderBy('fecha_inicio', 'asc');
     }
 
-    public function headings(): array
-    {
+    public function headings(): array {
         return [
             'ID Reserva', 'Docente', 'Evento', 'Bloque', 'Espacio', 'Fecha', 'Horario', 
-            'Bus', 'Comida', 'Calificación (1-5)', 
-            'Pregunta 1', 'Pregunta 2', 'Observaciones' // Reemplaza Pregunta 1 y 2 por tus criterios reales
+            'Bus', 'Comida', 'Nota Global (1-5)', 'Limpieza (1-5)', 'Equipos (1-5)', 'Puntualidad (1-5)', 'Observaciones Docente'
         ];
     }
 
-    public function map($reserva): array
-    {
+    public function map($reserva): array {
         $encuesta = $reserva->solicitud ? $reserva->solicitud->encuestaEspacio : null;
-        // Traductor JSON
         $respuestas = [];
         if ($encuesta && $encuesta->respuestas_detalladas) {
             $respuestas = is_string($encuesta->respuestas_detalladas) ? json_decode($encuesta->respuestas_detalladas, true) : $encuesta->respuestas_detalladas;
@@ -72,11 +55,10 @@ class EspaciosExport implements FromQuery, WithHeadings, WithMapping
             $reserva->hora_inicio . ' - ' . $reserva->hora_fin,
             ($reserva->solicitud && $reserva->solicitud->transporte) ? 'SÍ' : 'NO',
             ($reserva->solicitud && $reserva->solicitud->restaurante) ? 'SÍ' : 'NO',
-            
-            // DATOS DE LA ENCUESTA
             $encuesta->calificacion_general ?? 'Sin evaluar',
-            $respuestas['limpieza'] ?? 'N/A', // OJO: Cambia 'limpieza' por la llave JSON real que guardas
-            $respuestas['equipos'] ?? 'N/A',  // OJO: Cambia 'equipos' por la llave JSON real que guardas
+            $respuestas['limpieza'] ?? 'N/A',
+            $respuestas['equipos'] ?? 'N/A',
+            $respuestas['puntualidad'] ?? 'N/A',
             $encuesta->observaciones ?? 'N/A'
         ];
     }

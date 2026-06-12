@@ -1,3 +1,4 @@
+HTML
 @extends('layouts.app')
 @section('title', 'Auditoría de Reservas')
 
@@ -8,6 +9,7 @@
             <span class="text-xl">🗑️</span> {{ session('success') }}
         </div>
     @endif
+    
     <div class="flex justify-between items-end mb-10">
         <div>
             <h1 class="text-4xl font-black text-gray-900 tracking-tighter">Auditoría de Espacios</h1>
@@ -62,7 +64,7 @@
         </div>
     </form>
 
-    <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-100">
+    <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-100 relative">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
@@ -111,7 +113,6 @@
 
                         <td class="p-5 align-middle text-right">
                             <div class="flex items-center justify-end gap-2">
-                                
                                 <button type="button" onclick="abrirModal('{{ $reserva->id }}')" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-700 transition-colors shadow-sm">
                                     Ver Detalles
                                 </button>
@@ -123,98 +124,6 @@
                                     </button>
                                 </form>
                             </div>
-
-                            <div id="modal-{{ $reserva->id }}" class="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm hidden text-left" style="margin: 0;">
-                                <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                                    
-                                    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                                        <h3 class="text-xl font-black text-gray-800">Detalles de la Reserva</h3>
-                                        <button type="button" onclick="cerrarModal('{{ $reserva->id }}')" class="text-gray-400 hover:text-red-500 transition-colors text-3xl font-bold leading-none">&times;</button>
-                                    </div>
-
-                                    <div class="p-6 space-y-6 overflow-y-auto">
-                                        <div>
-                                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Información General</p>
-                                            <h4 class="text-lg font-bold text-blue-700">{{ $reserva->titulo ?? $reserva->solicitud->titulo_evento ?? 'Sin título' }}</h4>
-                                            <p class="text-sm text-gray-600"><b>Solicita:</b> {{ $reserva->correo_docente ?? $reserva->solicitud->correo_solicitante ?? 'N/A' }}</p>
-                                            <p class="text-sm text-gray-600 mt-2"><b>Observaciones del Docente:</b></p>
-                                            <p class="text-sm bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1 italic">{{ $reserva->observaciones ?? 'Sin observaciones especiales.' }}</p>
-                                            <p class="text-sm text-gray-600 mt-3"><b>Recursos Físicos Solicitados:</b></p>
-                                            <div class="flex flex-wrap gap-1 mt-1">
-                                                @if($reserva->recursos_adicionales)
-                                                    @foreach($reserva->recursos_adicionales as $item)
-                                                        <span class="text-[10px] bg-gray-100 border border-gray-200 text-gray-600 px-2 py-1 rounded font-bold">{{ $item }}</span>
-                                                    @endforeach
-                                                @else
-                                                    <span class="text-xs text-gray-400 italic">Ninguno</span>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        @php 
-                                            $encuesta = $reserva->solicitud ? $reserva->solicitud->encuestaEspacio : null; 
-                                            $respuestas = [];
-                                            if ($encuesta && $encuesta->respuestas_detalladas) {
-                                                // Truco para decodificar JSON si viene como texto desde la DB
-                                                $respuestas = is_string($encuesta->respuestas_detalladas) 
-                                                    ? json_decode($encuesta->respuestas_detalladas, true) 
-                                                    : $encuesta->respuestas_detalladas;
-                                            }
-                                        @endphp
-
-                                        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
-                                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-200 pb-1 flex items-center gap-2">
-                                                <span>⭐</span> Resultados de Encuesta
-                                            </p>
-                                            
-                                            @if($encuesta)
-                                                <div class="flex items-center gap-2 mb-4">
-                                                    <span class="text-xs font-black text-gray-800 uppercase">Nota Global:</span>
-                                                    <div class="flex text-lg">
-                                                        @for($i = 1; $i <= 5; $i++)
-                                                            <span class="leading-none {{ $i <= $encuesta->calificacion_general ? 'text-yellow-400' : 'text-gray-300' }}">★</span>
-                                                        @endfor
-                                                    </div>
-                                                </div>
-
-                                                <div class="grid grid-cols-2 gap-3 mb-4">
-                                                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                                                        <span class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Limpieza / Organización</span>
-                                                        <span class="text-sm text-gray-800 font-black">{{ $respuestas['limpieza'] ?? 'N/A' }}{{ isset($respuestas['limpieza']) ? '/5' : '' }}</span>
-                                                    </div>
-                                                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                                                        <span class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Equipos (TV/Video)</span>
-                                                        <span class="text-sm text-gray-800 font-black">{{ $respuestas['equipos'] ?? 'N/A' }}{{ isset($respuestas['equipos']) ? '/5' : '' }}</span>
-                                                    </div>
-                                                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-                                                        <span class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Puntualidad</span>
-                                                        <span class="text-sm text-gray-800 font-black">{{ $respuestas['puntualidad'] ?? 'N/A' }}{{ isset($respuestas['puntualidad']) ? '/5' : '' }}</span>
-                                                    </div>
-                                                </div>
-
-                                                @if($encuesta->observaciones)
-                                                    <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
-                                                        <span class="text-[10px] font-black text-blue-400 uppercase block mb-1">Observaciones del Docente:</span>
-                                                        <p class="text-xs text-gray-700 italic leading-relaxed">"{{ $encuesta->observaciones }}"</p>
-                                                    </div>
-                                                @endif
-                                            @else
-                                                <div class="text-center py-4">
-                                                    <span class="text-2xl mb-2 block opacity-50">⏳</span>
-                                                    <p class="text-xs text-gray-500 font-bold uppercase">Aún no evaluado por el docente</p>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 text-right">
-                                        <button type="button" onclick="cerrarModal('{{ $reserva->id }}')" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg text-sm font-bold hover:bg-gray-300 transition-colors">
-                                            Cerrar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
                         </td>
                     </tr>
                     @empty
@@ -235,8 +144,100 @@
     </div>
 </div>
 
+@foreach($reservas as $reserva)
+    @php 
+        $encuesta = $reserva->solicitud ? $reserva->solicitud->encuestaEspacio : null; 
+        $respuestas = [];
+        if ($encuesta && $encuesta->respuestas_detalladas) {
+            $respuestas = is_string($encuesta->respuestas_detalladas) 
+                ? json_decode($encuesta->respuestas_detalladas, true) 
+                : $encuesta->respuestas_detalladas;
+        }
+    @endphp
+
+    <div id="modal-{{ $reserva->id }}" class="fixed inset-0 z-[9999] flex items-center justify-center px-4 bg-black/70 backdrop-blur-sm hidden text-left" style="margin: 0;">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="text-xl font-black text-gray-800">Detalles de la Reserva</h3>
+                <button type="button" onclick="cerrarModal('{{ $reserva->id }}')" class="text-gray-400 hover:text-red-500 transition-colors text-3xl font-bold leading-none">&times;</button>
+            </div>
+
+            <div class="p-6 space-y-6 overflow-y-auto">
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">Información General</p>
+                    <h4 class="text-lg font-bold text-blue-700">{{ $reserva->titulo ?? $reserva->solicitud->titulo_evento ?? 'Sin título' }}</h4>
+                    <p class="text-sm text-gray-600"><b>Solicita:</b> {{ $reserva->correo_docente ?? $reserva->solicitud->correo_solicitante ?? 'N/A' }}</p>
+                    <p class="text-sm text-gray-600 mt-2"><b>Observaciones del Docente:</b></p>
+                    <p class="text-sm bg-gray-50 p-3 rounded-lg border border-gray-100 mt-1 italic">{{ $reserva->observaciones ?? 'Sin observaciones especiales.' }}</p>
+                    <p class="text-sm text-gray-600 mt-3"><b>Recursos Físicos Solicitados:</b></p>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                        @if($reserva->recursos_adicionales)
+                            @foreach($reserva->recursos_adicionales as $item)
+                                <span class="text-[10px] bg-gray-100 border border-gray-200 text-gray-600 px-2 py-1 rounded font-bold">{{ $item }}</span>
+                            @endforeach
+                        @else
+                            <span class="text-xs text-gray-400 italic">Ninguno</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 border-b border-gray-200 pb-1 flex items-center gap-2">
+                        <span>⭐</span> Resultados de Encuesta
+                    </p>
+                    
+                    @if($encuesta)
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-xs font-black text-gray-800 uppercase">Nota Global:</span>
+                            <div class="flex text-lg">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <span class="leading-none {{ $i <= $encuesta->calificacion_general ? 'text-yellow-400' : 'text-gray-300' }}">★</span>
+                                @endfor
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                                <span class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Limpieza / Organización</span>
+                                <span class="text-sm text-gray-800 font-black">{{ $respuestas['limpieza'] ?? 'N/A' }}{{ isset($respuestas['limpieza']) ? '/5' : '' }}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                                <span class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Equipos (TV/Video)</span>
+                                <span class="text-sm text-gray-800 font-black">{{ $respuestas['equipos'] ?? 'N/A' }}{{ isset($respuestas['equipos']) ? '/5' : '' }}</span>
+                            </div>
+                            <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                                <span class="text-[10px] text-gray-500 font-bold uppercase block mb-1">Puntualidad</span>
+                                <span class="text-sm text-gray-800 font-black">{{ $respuestas['puntualidad'] ?? 'N/A' }}{{ isset($respuestas['puntualidad']) ? '/5' : '' }}</span>
+                            </div>
+                        </div>
+
+                        @if($encuesta->observaciones)
+                            <div class="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+                                <span class="text-[10px] font-black text-blue-400 uppercase block mb-1">Observaciones del Docente:</span>
+                                <p class="text-xs text-gray-700 italic leading-relaxed">"{{ $encuesta->observaciones }}"</p>
+                            </div>
+                        @endif
+                    @else
+                        <div class="text-center py-4">
+                            <span class="text-2xl mb-2 block opacity-50">⏳</span>
+                            <p class="text-xs text-gray-500 font-bold uppercase">Aún no evaluado por el docente</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            
+            <div class="bg-gray-50 px-6 py-4 border-t border-gray-100 text-right">
+                <button type="button" onclick="cerrarModal('{{ $reserva->id }}')" class="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg text-sm font-bold hover:bg-gray-300 transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+@endforeach
+
 <script>
-    // JS PARA EL FILTRO CASCADA (TORRE -> SALÓN)
+    // Filtro Cascada
     document.getElementById('filtro-torre').addEventListener('change', function() {
         const torreId = this.value;
         const espacioSelect = document.getElementById('filtro-espacio');
@@ -251,13 +252,7 @@
         });
     });
 
-    // JS INFALIBLE PARA LOS MODALES
-    function abrirModal(id) {
-        document.getElementById('modal-' + id).classList.remove('hidden');
-    }
-    
-    function cerrarModal(id) {
-        document.getElementById('modal-' + id).classList.add('hidden');
-    }
+    function abrirModal(id) { document.getElementById('modal-' + id).classList.remove('hidden'); }
+    function cerrarModal(id) { document.getElementById('modal-' + id).classList.add('hidden'); }
 </script>
 @endsection

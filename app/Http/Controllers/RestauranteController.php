@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\SolicitudRestaurante;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificacionEstadoServicio;
+use Illuminate\Support\Facades\Mail;
 use App\Exports\RestauranteExport;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -13,77 +13,51 @@ class RestauranteController extends Controller
 {
     public function index(Request $request)
     {
-        if (!in_array(auth()->user()->rol, ['admin', 'admin_restaurante'])) {
-            abort(403, 'Acceso Denegado.');
+        $usuario = auth()->user();
+        if (!in_array($usuario->rol, ['admin', 'gerencia_academica', 'gerencia_administrativa', 'gerencia_operativa'])) {
+            abort(403);
         }
 
-        $query = \App\Models\SolicitudRestaurante::with(['solicitud', 'solicitud.reservaFisica.espacio.torre']);
+        $query = SolicitudRestaurante::with(['solicitud.reservasFisicas.espacio']);
 
-        if ($request->filled('estado')) $query->where('estado_restaurante', $request->estado);
-        if ($request->filled('fecha')) $query->whereDate('fecha_hora_evento', $request->fecha);
-        if ($request->filled('solicitante')) {
-            $query->whereHas('solicitud', function($q) use ($request) {
-                $q->where('correo_solicitante', 'like', '%' . $request->solicitante . '%');
-            });
-        }
+        if ($usuario->rol === 'gerencia_academica') { $query->where('aprobador_id', 'Gerencia Académica'); }
+        elseif ($usuario->rol === 'gerencia_administrativa') { $query->where('aprobador_id', 'Gerencia Administrativa'); }
+        elseif ($usuario->rol === 'gerencia_operativa') { $query->where('aprobador_id', 'Gerencia Operativa'); }
 
-        // PAGINACIÓN APLICADA
-        $restaurantes = $query->orderBy('created_at', 'desc')->paginate(10);
+        if ($request->filled('fecha')) { $query->whereDate('fecha_hora_evento', $request->fecha); }
+        if ($request->filled('estado')) { $query->where('estado_restaurante', $request->estado); }
 
+        $restaurantes = $query->orderBy('fecha_hora_evento', 'asc')->paginate(10);
         return view('admin.restaurante.index', compact('restaurantes'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'estado_restaurante' => 'required|string',
-            'respuesta_cocina' => 'nullable|string'
+            'estado_restaurante' => 'required|in:Aprobado,Rechazado',
+            'respuesta_cocina' => 'required|string'
         ]);
 
-        $restaurante = SolicitudRestaurante::findOrFail($id);
-        $restaurante->update([
+        $rest = SolicitudRestaurante::with('solicitud')->findOrFail($id);
+        $rest->update([
             'estado_restaurante' => $request->estado_restaurante,
             'respuesta_cocina' => $request->respuesta_cocina
         ]);
 
-        // --- INICIO ENVÍO DE CORREO (EL RELEVO) ---
-        try {
-            $estadoNuevo = $request->estado_restaurante;
-            
-            // 1. Correo normal para el Docente notificando el cambio
-            $datosCorreo = [
-                'titulo' => $restaurante->solicitud->titulo_evento,
-                'servicio' => 'Alimentación / Restaurante',
-                'estado' => $estadoNuevo,
-                'notas' => $request->respuesta_cocina
-            ];
-            \Illuminate\Support\Facades\Mail::to($restaurante->solicitud->correo_solicitante)
-                ->send(new \App\Mail\NotificacionEstadoServicio($datosCorreo));
+        // 🚀 BREVO: NOTIFICACIÓN AL DOCENTE
+        $datosEstado = [
+            'titulo' => $rest->solicitud->titulo_evento,
+            'servicio' => 'Alimentación y Comidas (Gerencia)',
+            'estado' => $request->estado_restaurante,
+            'respuesta' => $request->respuesta_cocina
+        ];
+        Mail::to($rest->solicitud->correo_solicitante)->send(new NotificacionEstadoServicio($datosEstado));
 
-            // 2. ALERTA A LA COCINA (Solo si se aprueba un evento)
-            if ($estadoNuevo === 'Aprobado') {
-                // Buscamos los correos de todo el personal que tenga el rol 'cocina'
-                $correosCocina = \App\Models\User::where('rol', 'cocina')->pluck('email');
-                
-                if ($correosCocina->count() > 0) {
-                    $datosCocina = $datosCorreo;
-                    // Le ponemos un título llamativo (con banderas) para que la cocina no lo ignore
-                    $datosCocina['titulo'] = '🚨 NUEVO PEDIDO APROBADO: ' . $restaurante->solicitud->titulo_evento;
-                    \Illuminate\Support\Facades\Mail::to($correosCocina)
-                        ->send(new \App\Mail\NotificacionEstadoServicio($datosCocina));
-                }
-            }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Error enviando correo de restaurante: ' . $e->getMessage());
-        }
-        // --- FIN ENVÍO DE CORREO ---
-
-        return back()->with('success', '¡Decisión e instrucciones de cocina guardadas exitosamente!');
+        return redirect()->route('admin.restaurante.index')->with('success', 'Presupuesto evaluado correctamente.');
     }
 
-    public function exportarExcel(Request $request)
+    public function export(Request $request)
     {
-        // Reutilizamos el mismo molde, pero le cambiamos el nombre al archivo a descargar
-        return Excel::download(new RestauranteExport($request->fecha), 'Auditoria_Gerencia_Restaurante.xlsx');
+        return Excel::download(new RestauranteExport($request->fecha, $request->estado, $request->solicitante), 'Reporte_Restaurante.xlsx');
     }
 }

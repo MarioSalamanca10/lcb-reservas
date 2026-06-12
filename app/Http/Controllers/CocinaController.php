@@ -12,42 +12,27 @@ class CocinaController extends Controller
     public function index(Request $request)
     {
         if (!in_array(auth()->user()->rol, ['admin', 'cocina'])) {
-            abort(403, 'Acceso Denegado.');
+            abort(403, 'Acceso exclusivo de producción para el área de cocina.');
         }
 
-        // COCINA SOLO VE LO APROBADO O LO QUE YA FINALIZARON ELLOS MISMOS
-        $query = SolicitudRestaurante::with(['solicitud', 'solicitud.reservaFisica.espacio.torre'])
-            ->whereIn('estado_restaurante', ['Aprobado', 'Finalizado']);
+        $query = SolicitudRestaurante::whereIn('estado_restaurante', ['Aprobado', 'Finalizado'])
+            ->with(['solicitud.reservasFisicas.espacio.torre']);
 
         if ($request->filled('fecha')) {
             $query->whereDate('fecha_hora_evento', $request->fecha);
         }
 
-        $pedidos = $query->orderBy('fecha_hora_evento', 'asc')->paginate(15);
+        $pedidos = $query->orderBy('fecha_hora_evento', 'asc')->paginate(12);
 
         return view('cocina.index', compact('pedidos'));
     }
 
-    // NUEVA FUNCIÓN: El Chef marca el pedido como entregado
-    public function finalizar(Request $request, $id)
+    public function export(Request $request)
     {
-        $request->validate([
-            'observaciones_finales' => 'nullable|string'
-        ]);
-
-        $pedido = SolicitudRestaurante::findOrFail($id);
-        
-        $pedido->update([
-            'estado_restaurante' => 'Finalizado',
-            // Concatenamos las notas de Gerencia con las notas finales del Chef
-            'respuesta_cocina' => $pedido->respuesta_cocina . ' | [Nota Chef]: ' . ($request->observaciones_finales ?? 'Entregado sin novedades.')
-        ]);
-
-        return back()->with('success', '¡Pedido marcado como Finalizado y bloqueado en el sistema!');
-    }
-
-    public function exportarExcel(Request $request)
-    {
-        return Excel::download(new RestauranteExport($request->fecha), 'Planilla_Produccion_Cocina.xlsx');
+        return Excel::download(new RestauranteExport(
+            $request->fecha, 
+            'Aprobado', 
+            $request->solicitante
+        ), 'Planilla_Cocina_Produccion.xlsx');
     }
 }

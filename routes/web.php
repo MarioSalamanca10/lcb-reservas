@@ -93,6 +93,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/espacios/{espacio}/editar', [EspacioRecursoController::class, 'edit'])->name('espacios.edit');
         Route::put('/espacios/{espacio}', [EspacioRecursoController::class, 'update'])->name('espacios.update');
         Route::delete('/espacios/{espacio}', [EspacioRecursoController::class, 'destroy'])->name('espacios.destroy');
+
+        //Rutas de Usuarios
+        Route::get('/admin/usuarios', [\App\Http\Controllers\UserController::class, 'index'])->name('admin.usuarios.index');
+        Route::patch('/admin/usuarios/{id}/rol', [\App\Http\Controllers\UserController::class, 'updateRole'])->name('admin.usuarios.updateRole');
+
+
     });
 
 });

@@ -12,59 +12,47 @@ use Carbon\Carbon;
 class TransporteExport implements FromQuery, WithHeadings, WithMapping
 {
     use Exportable;
+    protected $fecha, $estado, $solicitante;
 
-    protected $fecha;
-
-    public function __construct($fecha)
-    {
-        $this->fecha = $fecha;
+    public function __construct($fecha = null, $estado = null, $solicitante = null) {
+        $this->fecha = $fecha; $this->estado = $estado; $this->solicitante = $solicitante;
     }
 
-    public function query()
-    {
-        return SolicitudTransporte::query()->with(['solicitud.encuestaTransporte']);
+    public function query() {
+        $query = SolicitudTransporte::query()->with(['solicitud.encuestaTransporte']);
+        if ($this->fecha) { $query->whereDate('fecha_hora_servicio', $this->fecha); }
+        if ($this->estado) { $query->where('estado_transporte', $this->estado); }
+        if ($this->solicitante) {
+            $query->whereHas('solicitud', function($q) { $q->where('correo_solicitante', 'like', '%' . $this->solicitante . '%'); });
+        }
+        return $query->orderBy('fecha_hora_servicio', 'asc');
     }
 
-    public function headings(): array
-    {
+    public function headings(): array {
         return [
             'ID', 'Responsable', 'Celular', 'Área', 'Destino', 'Salida', 'Regreso',
-            'Estudiantes', 'Adultos', 'Necesidades', 'Estado', 'Novedades Logística',
-            // --- NUEVAS COLUMNAS DE ENCUESTA ---
-            'Calificación General (1-5)',
-            'Puntualidad', // Ajusta a tu llave JSON
-            'Estado del Vehículo', // Ajusta a tu llave JSON
-            'Observaciones de Ruta'
+            'Estudiantes', 'Adultos', 'Necesidades', 'Estado', 'Placas/Logística',
+            'Nota Encuesta (1-5)', 'Comentarios del Docente'
         ];
     }
 
-    public function map($trans): array
-    {
+    public function map($trans): array {
         $encuesta = $trans->solicitud ? $trans->solicitud->encuestaTransporte : null;
-        // Traductor JSON
-        $respuestas = [];
-        if ($encuesta && $encuesta->respuestas_detalladas) {
-            $respuestas = is_string($encuesta->respuestas_detalladas) ? json_decode($encuesta->respuestas_detalladas, true) : $encuesta->respuestas_detalladas;
-        }
 
         return [
             $trans->id,
-            $trans->responsable,
-            $trans->celular,
+            $trans->nombre_responsable,
+            $trans->celular_responsable,
             $trans->area_solicitante ?? 'N/A',
             $trans->direccion_destino,
-            Carbon::parse($trans->fecha_hora_salida)->format('d/m/Y h:i A'),
+            Carbon::parse($trans->fecha_hora_servicio)->format('d/m/Y h:i A'),
             $trans->fecha_hora_regreso ? Carbon::parse($trans->fecha_hora_regreso)->format('d/m/Y h:i A') : 'Solo Ida',
             $trans->num_estudiantes,
             $trans->num_adultos,
             is_array($trans->necesidades_servicio) ? implode(', ', $trans->necesidades_servicio) : $trans->necesidades_servicio,
             $trans->estado_transporte,
-            $trans->respuesta_coordinador ?? '',
-
-            // --- DATA DE LA ENCUESTA ---
+            $trans->respuesta_coordinador ?? 'N/A',
             $encuesta->calificacion_general ?? 'Sin evaluar',
-            $respuestas['puntualidad'] ?? 'N/A', // Ajusta a tu JSON real
-            $respuestas['vehiculo'] ?? 'N/A',    // Ajusta a tu JSON real
             $encuesta->observaciones ?? 'N/A'
         ];
     }

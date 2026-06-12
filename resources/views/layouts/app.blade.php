@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LCB - @yield('title', 'Portal de Gestión')</title>
     @vite('resources/css/app.css')
-    <!-- Script de Tailwind para desarrollo local -->
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style> body { font-family: 'Inter', sans-serif; } </style>
     
-    <!-- Flatpickr (Calendarios) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
@@ -35,27 +36,16 @@
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden text-gray-800 antialiased">
 
-    <!-- ========================================== -->
-    <!-- OVERLAY MÓVIL (Fondo oscuro al abrir menú) -->
-    <!-- ========================================== -->
     <div id="mobile-overlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
 
-    <!-- ========================================== -->
-    <!-- BARRA LATERAL (DARK ONYX - ZINC 900)       -->
-    <!-- ========================================== -->
     <aside id="sidebar" class="w-72 bg-[#18181b] flex flex-col fixed inset-y-0 left-0 z-50 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out shadow-2xl border-r border-zinc-800">
         
-        <!-- LOGO OFICIAL DEL LICEO -->
         <div class="pt-8 pb-6 px-6 flex flex-col items-center justify-center relative">
             <div class="absolute inset-0 bg-gradient-to-b from-[#4EAA68]/10 to-transparent opacity-50 pointer-events-none"></div>
-            
             <img src="{{ asset('images/LOGOLCB_sinbanderin.png') }}" alt="Logo LCB" class="w-36 h-auto drop-shadow-[0_0_15px_rgba(78,170,104,0.3)] hover:scale-105 transition-transform duration-500 relative z-10">
-            <span class="mt-4 text-[9px] uppercase tracking-[0.3em] font-black text-zinc-400 relative z-10">
-                Portal de Gestión
-            </span>
+            <span class="mt-4 text-[9px] uppercase tracking-[0.3em] font-black text-zinc-400 relative z-10">Portal de Gestión</span>
         </div>
 
-        <!-- TARJETA DE PERFIL -->
         <div class="px-5 mb-6">
             <div class="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-3 flex items-center gap-3 backdrop-blur-sm hover:bg-zinc-800 transition-colors">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 border border-zinc-600 flex items-center justify-center text-white font-black shadow-inner">
@@ -70,9 +60,6 @@
 
         <nav id="sidebar-nav" class="flex-1 px-4 space-y-1 overflow-y-auto dark-scrollbar pb-6">
             
-            <!-- ========================================== -->
-            <!-- ZONA DOCENTES: HERRAMIENTAS GENERALES      -->
-            <!-- ========================================== -->
             <p class="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-4 mb-3 mt-2">Área Personal</p>
 
             <a href="{{ route('reservas.create') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('reservas.create') ? 'bg-zinc-800 text-white' : '' }}">
@@ -84,82 +71,85 @@
             <a href="{{ route('reservas.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('reservas.index') ? 'bg-zinc-800 text-white' : '' }}">
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#4EAA68] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('reservas.index') ? 'opacity-100 shadow-[0_0_8px_#4EAA68]' : '' }}"></div>
                 <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('reservas.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">📋</span>
-                <span class="font-semibold text-sm tracking-wide">Reservas</span>
+                <span class="font-semibold text-sm tracking-wide">Mis Solicitudes</span>
             </a>
 
-            <!-- RUTAS DE SERVICIOS INDEPENDIENTES -->
-            <a href="{{ route('servicios.transporte.create') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group">
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#4EAA68] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
-                <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0">🚌</span>
+            <a href="{{ route('servicios.transporte.create') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('servicios.transporte.*') ? 'bg-zinc-800 text-white' : '' }}">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#4EAA68] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('servicios.transporte.*') ? 'opacity-100 shadow-[0_0_8px_#4EAA68]' : '' }}"></div>
+                <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('servicios.transporte.*') ? 'grayscale-0 opacity-100 scale-110' : '' }}">🚌</span>
                 <span class="font-semibold text-sm tracking-wide">Solicitar Transporte</span>
             </a>
 
-            <a href="{{ route('servicios.restaurante.create') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group">
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFDE00] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
-                <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0">🍽️</span>
+            <a href="{{ route('servicios.restaurante.create') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('servicios.restaurante.*') ? 'bg-zinc-800 text-white' : '' }}">
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFDE00] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('servicios.restaurante.*') ? 'opacity-100 shadow-[0_0_8px_#FFDE00]' : '' }}"></div>
+                <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('servicios.restaurante.*') ? 'grayscale-0 opacity-100 scale-110' : '' }}">🍽️</span>
                 <span class="font-semibold text-sm tracking-wide">Solicitar Restaurante</span>
             </a>
 
-            <!-- ========================================== -->
-            <!-- ZONA VIP: CENTRO DE CONTROL                -->
-            <!-- ========================================== -->
-            @if(in_array(auth()->user()->rol, ['admin', 'admin_transporte', 'admin_restaurante', 'cocina', 'admin_espacios']))
+            @if(in_array(auth()->user()->rol, ['admin', 'admin_espacios', 'admin_transporte', 'gerencia_academica', 'gerencia_administrativa', 'gerencia_operativa', 'cocina']))
                 <div class="h-px bg-zinc-800 my-5 w-full"></div>
-                <p class="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-4 mb-3">Centro de Control</p>
+                <p class="text-zinc-500 text-[10px] font-black uppercase tracking-widest px-4 mb-3">Módulos Administrativos</p>
                 
-               <!-- Admin Espacios y Súper Admin -->
-                @if(in_array(auth()->user()->rol, ['admin', 'admin_espacios']))
-                    <!-- Tablero General (Súper Admin lo ve, luego lo volveremos Reportes) -->
+                <div class="space-y-2">
+                    
                     @if(auth()->user()->rol === 'admin')
-                        <a href="{{ route('admin.dashboard') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.dashboard') ? 'bg-zinc-800 text-white' : '' }}">
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.dashboard') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
-                            <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.dashboard') ? 'grayscale-0 opacity-100 scale-110' : '' }}">📊</span>
-                            <span class="font-semibold text-sm tracking-wide">Tablero General</span>
+                        <a href="{{ route('admin.usuarios.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-zinc-300 hover:bg-zinc-800 {{ request()->routeIs('admin.usuarios.*') ? 'bg-zinc-700 text-white shadow-md border-l-4 border-blue-500' : '' }}">
+                            <span>👥</span> Gestión de Usuarios
                         </a>
                     @endif
 
-                    <a href="{{ route('admin.reservas.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.reservas.index') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.reservas.index') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.reservas.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">⚙️</span>
-                        <span class="font-semibold text-sm tracking-wide">Auditoría Reservas</span>
-                    </a>
+                    @if(in_array(auth()->user()->rol, ['admin', 'admin_espacios']))
+                        <div x-data="{ open: {{ request()->routeIs('admin.reservas.*') || request()->is('espacios*') ? 'true' : 'false' }} }" class="space-y-1">
+                            <button @click="open = !open" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-zinc-300 hover:bg-zinc-800">
+                                <div class="flex items-center gap-3">
+                                    <span>🏢</span> Espacios y Salones
+                                </div>
+                                <span class="text-xs transition-transform duration-200" :class="open ? 'rotate-180' : '' ">▼</span>
+                            </button>
+                            <div x-show="open" class="pl-4 space-y-1" style="display: none;">
+                                <a href="{{ route('admin.reservas.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:bg-zinc-800 hover:text-white {{ request()->routeIs('admin.reservas.index') ? 'text-white bg-zinc-800' : '' }}">
+                                    • Auditoría de Reservas
+                                </a>
+                                <a href="{{ route('espacios.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:bg-zinc-800 hover:text-white {{ request()->is('espacios*') ? 'text-white bg-zinc-800' : '' }}">
+                                    • Catálogo de Salones
+                                </a>
+                            </div>
+                        </div>
+                    @endif
 
-                    <a href="{{ route('espacios.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('espacios.index') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-indigo-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('espacios.index') ? 'opacity-100 shadow-[0_0_8px_#6366f1]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('espacios.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">🏢</span>
-                        <span class="font-semibold text-sm tracking-wide">Catálogo Salones</span>
-                    </a>
-                @endif
+                    @if(in_array(auth()->user()->rol, ['admin', 'admin_transporte']))
+                        <a href="{{ route('admin.transporte.index') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-zinc-300 hover:bg-zinc-800 {{ request()->routeIs('admin.transporte.*') ? 'bg-zinc-700 text-white shadow-md border-l-4 border-[#4EAA68]' : '' }}">
+                            <span>🚌</span> Auditoría Transporte
+                        </a>
+                    @endif
 
-                <!-- Admin Transporte y Súper Admin -->
-                @if(in_array(auth()->user()->rol, ['admin', 'admin_transporte']))
-                    <a href="{{ route('admin.transporte.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.transporte.index') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#4EAA68] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.transporte.index') ? 'opacity-100 shadow-[0_0_8px_#4EAA68]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.transporte.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">🚍</span>
-                        <span class="font-semibold text-sm tracking-wide">Gestión Transporte</span>
-                    </a>
-                @endif
+                    @if(in_array(auth()->user()->rol, ['admin', 'gerencia_academica', 'gerencia_administrativa', 'gerencia_operativa', 'cocina']))
+                        <div x-data="{ open: {{ request()->routeIs('admin.restaurante.*') || request()->routeIs('cocina.*') ? 'true' : 'false' }} }" class="space-y-1">
+                            <button @click="open = !open" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-zinc-300 hover:bg-zinc-800">
+                                <div class="flex items-center gap-3">
+                                    <span>🍽️</span> Restaurante / Cocina
+                                </div>
+                                <span class="text-xs transition-transform duration-200" :class="open ? 'rotate-180' : '' ">▼</span>
+                            </button>
+                            <div x-show="open" class="pl-4 space-y-1" style="display: none;">
+                                @if(in_array(auth()->user()->rol, ['admin', 'gerencia_academica', 'gerencia_administrativa', 'gerencia_operativa']))
+                                    <a href="{{ route('admin.restaurante.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:bg-zinc-800 hover:text-white {{ request()->routeIs('admin.restaurante.index') ? 'text-white bg-zinc-800' : '' }}">
+                                        • Autorizar Presupuestos
+                                    </a>
+                                @endif
+                                @if(in_array(auth()->user()->rol, ['admin', 'cocina']))
+                                    <a href="{{ route('cocina.index') }}" class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:bg-zinc-800 hover:text-white {{ request()->routeIs('cocina.index') ? 'text-white bg-zinc-800' : '' }}">
+                                        • Pizarra de Producción
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
 
-                <!-- Admin Restaurante y Súper Admin -->
-                @if(in_array(auth()->user()->rol, ['admin', 'admin_restaurante']))
-                    <a href="{{ route('admin.restaurante.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('admin.restaurante.index') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#FFDE00] rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('admin.restaurante.index') ? 'opacity-100 shadow-[0_0_8px_#FFDE00]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('admin.restaurante.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">👩‍🍳</span>
-                        <span class="font-semibold text-sm tracking-wide">Gestión Restaurante</span>
-                    </a>
-                @endif
-
-                @if(in_array(auth()->user()->rol, ['admin', 'cocina']))
-                    <a href="{{ route('cocina.index') }}" class="relative flex items-center py-3 px-4 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all duration-300 group {{ request()->routeIs('cocina.index') ? 'bg-zinc-800 text-white' : '' }}">
-                        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-500 rounded-r-md opacity-0 group-hover:opacity-100 transition-all duration-300 {{ request()->routeIs('cocina.index') ? 'opacity-100 shadow-[0_0_8px_#f97316]' : '' }}"></div>
-                        <span class="mr-3 text-xl transition-transform duration-300 group-hover:scale-110 grayscale opacity-70 group-hover:opacity-100 group-hover:grayscale-0 {{ request()->routeIs('cocina.index') ? 'grayscale-0 opacity-100 scale-110' : '' }}">👨‍🍳</span>
-                        <span class="font-semibold text-sm tracking-wide">Tablero del Chef</span>
-                    </a>
-                @endif
+                </div>
             @endif
         </nav>
 
-        <!-- BOTÓN LOGOUT -->
         <div class="p-4 border-t border-zinc-800">
             <form action="{{ route('logout') }}" method="POST" class="w-full">
                 @csrf
@@ -171,13 +161,9 @@
         </div>
     </aside>
 
-    <!-- ========================================== -->
-    <!-- ÁREA DE CONTENIDO PRINCIPAL                -->
-    <!-- ========================================== -->
     <main class="flex-1 flex flex-col h-screen overflow-hidden bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] relative">
         <div class="absolute inset-0 bg-slate-50/95 z-0 pointer-events-none"></div> 
         
-        <!-- HEADER MÓVIL -->
         <header class="md:hidden bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 relative z-10 shadow-sm">
             <div class="flex items-center gap-2">
                 <img src="{{ asset('images/LOGOLCB_sinbanderin.png') }}" alt="LCB" class="h-8 w-auto filter drop-shadow-sm opacity-90">
@@ -187,13 +173,11 @@
             </button>
         </header>
 
-        <!-- CONTENIDO INYECTADO -->
         <div class="relative z-10 w-full p-4 sm:p-8 overflow-y-auto flex-1">
             @yield('content')
         </div>
     </main>
 
-    <!-- SCRIPT MÓVIL Y CALENDARIOS -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mobileBtn = document.getElementById('mobile-menu-btn');
@@ -220,20 +204,15 @@
             flatpickr(".calendario-lcb", { locale: "es", dateFormat: "Y-m-d", disable: [ function(date) { return (date.getDay() === 0); } ] });
             flatpickr(".reloj-lcb", { enableTime: true, noCalendar: true, dateFormat: "H:i", minTime: "07:00", maxTime: "17:00", time_24hr: false, minuteIncrement: 15 });
 
-            // --- MAGIA PARA GUARDAR EL SCROLL DEL MENÚ ---
+            // MAGIA PARA GUARDAR EL SCROLL DEL MENÚ
             const sidebarNav = document.getElementById('sidebar-nav');
             if (sidebarNav) {
-                // 1. Al cargar la página, buscamos si había una posición guardada
                 const savedScroll = localStorage.getItem('sidebarScrollPos');
-                if (savedScroll) {
-                    sidebarNav.scrollTop = savedScroll;
-                }
-                // 2. Justo antes de cambiar de página, guardamos la posición actual
+                if (savedScroll) { sidebarNav.scrollTop = savedScroll; }
                 window.addEventListener('beforeunload', () => {
                     localStorage.setItem('sidebarScrollPos', sidebarNav.scrollTop);
                 });
             }
-
         });
     </script>
 </body>
